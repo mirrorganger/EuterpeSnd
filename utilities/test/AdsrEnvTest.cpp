@@ -32,7 +32,6 @@ TEST_F(ADSRTest, checkInitialState) {
 
 TEST_F(ADSRTest, checkNormalProcess){
     // GIVEN
-    int64_t ticksAttack = static_cast<int>(mParameters.attackTimeSec * mSamplingFreq);
     int64_t ticksDecay = static_cast<int>(mParameters.decayTimeSec * mSamplingFreq);
     int64_t ticksRelease = static_cast<int>(mParameters.releaseTimeSec * mSamplingFreq);
     float val = 0.0;
@@ -43,7 +42,7 @@ TEST_F(ADSRTest, checkNormalProcess){
     ASSERT_TRUE(mAdsr.isActive());
 
     // WHEN
-    while(ticksAttack-- >= 0U){
+    while(val < 1U){
         val = mAdsr.tick();
     }
     // THEN

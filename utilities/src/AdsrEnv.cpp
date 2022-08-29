@@ -13,11 +13,16 @@ struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-AdsrEnv::AdsrEnv() {}
+AdsrEnv::AdsrEnv() {
+    _attackSection.overshoot = 0.01;
+    _releaseSection.overshoot = 0.3;
+    _decaySection.overshoot = 0.3;
+}
 
 void AdsrEnv::configure(const AdsrEnv::Parameters &param) {
   _parameters = param;
 }
+
 void AdsrEnv::setSampleRate(float sampleRate) {
   _sampleRate = sampleRate;
   updateRates();
@@ -30,21 +35,24 @@ void AdsrEnv::setReleaseTime(float releaseTimeSec) {
   _parameters.releaseTimeSec = releaseTimeSec;
   updateRates();
 }
+
+void AdsrEnv::setDecayTime(float decayTimeSec) {
+    _parameters.decayTimeSec = decayTimeSec;
+    updateRates();
+}
+
 bool AdsrEnv::isActive() const {
   return !std::holds_alternative<Idle>(_stm.getState());
 }
 
 void AdsrEnv::trigger() {
   _stm.transition(NoteOnEvt());
-  _counter = static_cast<int>(_parameters.attackTimeSec * _sampleRate);
 }
 void AdsrEnv::release() {
   _stm.transition(NoteOffEvt{});
-  _counter = static_cast<int>(_parameters.releaseTimeSec * _sampleRate);
 }
 
 void AdsrEnv::reset() {
-  _counter = 0U;
   _envelopeValue = 0.0f;
 }
 
@@ -56,45 +64,42 @@ void AdsrEnv::reset() {
 float AdsrEnv::tick() {
   auto visitor = Overloaded{[&](Idle) { _envelopeValue = 0.0f; },
                             [&](Attack) {
-                              if (_counter == 0) {
-                                _stm.transition(CounterExpiredEvt{});
-                                _counter = static_cast<uint64_t>(_parameters.decayTimeSec * _sampleRate);
-                              } else {
-                                _counter--;
-                                _envelopeValue += _attackRate;
+                                _envelopeValue = _attackSection.offset + _envelopeValue * _attackSection.multiplier;
+                              if (_envelopeValue > 1.0) {
+                                  _envelopeValue = 1.0;
+                                  _stm.transition(TargetLevelReached{});
                               }
                             },
                             [&](Decay) {
-                              if (_counter == 0) {
-                                _stm.transition(CounterExpiredEvt{});
-                              } else {
-                                _counter--;
-                                _envelopeValue -= _decayRate;
-                              }
+                                _envelopeValue = _decaySection.offset + _envelopeValue * _decaySection.multiplier;
+                                if (_envelopeValue <= _parameters.sustainLevel) {
+                                    _envelopeValue = _parameters.sustainLevel;
+                                    _stm.transition(TargetLevelReached{});
+                                }
                             },
                             [&](Sustain) {},
                             [&](Release) {
-                              if (_counter == 0) {
-                                _stm.transition(CounterExpiredEvt{});
-                              } else {
-                                _counter--;
-                                _envelopeValue -= _releaseRate;
-                              }
+                                _envelopeValue = _releaseSection.offset + _envelopeValue * _releaseSection.multiplier;
+                                if (_envelopeValue <= 0.0) {
+                                    _envelopeValue = 0.0;
+                                    _stm.transition(TargetLevelReached{});
+                                }
                             }};
   std::visit(visitor, _stm.getState());
   return _envelopeValue;
 }
 
 void AdsrEnv::updateRates() {
-  _attackRate = 1.0f / (_parameters.attackTimeSec * _sampleRate);
-  _decayRate = (1.0f - _parameters.sustainLevel) /
-               (_parameters.decayTimeSec * _sampleRate);
-  _releaseRate =
-      (_parameters.sustainLevel) / (_parameters.releaseTimeSec * _sampleRate);
+    _attackSection.multiplier = getRateMult(_attackSection.overshoot,1.0f + _attackSection.overshoot, static_cast<uint32_t>(_parameters.attackTimeSec*_sampleRate));
+    _attackSection.offset = (1.f + _attackSection.overshoot) * (1.f - _attackSection.multiplier);
+    _decaySection.multiplier = getRateMult(_decaySection.overshoot,1.0f + _decaySection.overshoot, static_cast<uint32_t>(_parameters.decayTimeSec*_sampleRate));
+    _decaySection.offset = (_parameters.sustainLevel -_decaySection.overshoot) * (1.f - _decaySection.multiplier);
+    _releaseSection.multiplier = getRateMult(_releaseSection.overshoot,1.0f + _releaseSection.overshoot, static_cast<uint32_t>(_parameters.releaseTimeSec*_sampleRate));
+    _releaseSection.offset = (-_releaseSection.overshoot) * (1.f - _releaseSection.multiplier);
 }
-    // TODO: Check this with python
-    void AdsrEnv::updateCoeff(float startLevel, float endLevel, uint32_t lengthInSamples) {
-        _multCoeff = 1.0 + (log(static_cast<double>(endLevel)) - static_cast<double>(log(startLevel))) / (lengthInSamples);
-    }
+
+float AdsrEnv::getRateMult(float startLevel, float endLevel, uint32_t lengthInSamples) {
+        return expf(-logf(endLevel/ startLevel) / static_cast<float>(lengthInSamples));
+}
 
 }
