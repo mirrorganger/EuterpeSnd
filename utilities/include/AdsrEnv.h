@@ -37,10 +37,6 @@ struct ExpSection{
     T overshoot;
     T offset;
     T multiplier;
-
-    void update(uint32_t lengthInSamples){
-
-    }
 };
 
 class AdsrStm : public Fsm<AdsrStm, State> {

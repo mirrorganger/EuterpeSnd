@@ -14,7 +14,7 @@ struct Overloaded : Ts... {
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 AdsrEnv::AdsrEnv() {
-    _attackSection.overshoot = 0.01;
+    _attackSection.overshoot = 0.3;
     _releaseSection.overshoot = 0.3;
     _decaySection.overshoot = 0.3;
 }
@@ -65,7 +65,7 @@ float AdsrEnv::tick() {
   auto visitor = Overloaded{[&](Idle) { _envelopeValue = 0.0f; },
                             [&](Attack) {
                                 _envelopeValue = _attackSection.offset + _envelopeValue * _attackSection.multiplier;
-                              if (_envelopeValue > 1.0) {
+                              if (_envelopeValue >= 1.0) {
                                   _envelopeValue = 1.0;
                                   _stm.transition(TargetLevelReached{});
                               }
