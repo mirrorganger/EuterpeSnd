@@ -30,9 +30,9 @@ namespace synthtools {
     void WavetableOsc::setUp(const OscillatorType oscillatorType,
                              const uint32_t tableSize, const float sampleRate,
                              const bool useInterpolation) {
-        _inverseSampleRate = 1.0 / sampleRate;
+        _inverseSampleRate = 1.0f / sampleRate;
         _useInterpolation = useInterpolation;
-        _readPointer = 0;
+        _readPointer = 0.0f;
         _buffer.resize(tableSize);
         switch (oscillatorType) {
             case OscillatorType::SINE:
@@ -47,12 +47,14 @@ namespace synthtools {
             case OscillatorType::SAWTOOTH:
                 makeSawToothOscillator();
                 break;
+            case OscillatorType::FREE:
+                break;
         }
     }
 
     void WavetableOsc::setUp(const uint32_t tableSize, const float sampleRate, BuilderFunc builder,
                              const bool useInterpolation) {
-        _inverseSampleRate = 1.0 / sampleRate;
+        _inverseSampleRate = 1.0f / sampleRate;
         _useInterpolation = useInterpolation;
         _readPointer = 0;
         _buffer.resize(tableSize);
@@ -67,6 +69,10 @@ namespace synthtools {
 
     float WavetableOsc::getFrequency() const { return _freq; }
 
+    void WavetableOsc::setAmplitude(const float amplitude) {
+        _amplitude = amplitude;
+    }
+
     float WavetableOsc::process() {
 
         float outValue = 0.0;
@@ -79,25 +85,23 @@ namespace synthtools {
         else
             outValue = _buffer[(int) _readPointer];
 
-        _readPointer += _tableIncrement;
+        outValue *= _amplitude;
+        _readPointer += _tableIncrement.load();
 
         return outValue;
     }
 
-    void WavetableOsc::process(float *bufferToFill, uint32_t numFrames) {
-
-        memset(bufferToFill, 0, sizeof(float) * numFrames);
-
+    void WavetableOsc::renderAudio(float *audioData, uint32_t numFrames) {
         if (_buffer.size() == 0)
             return;
 
         for (uint32_t i = 0; i < numFrames; ++i) {
-            bufferToFill[i] = process();
+                audioData[i] = process();
         }
     }
 
     void WavetableOsc::updateIncrement() {
-        _tableIncrement = _buffer.size() * _freq * _inverseSampleRate;
+        _tableIncrement.store(static_cast<float>(_buffer.size()) * _freq * _inverseSampleRate);
     }
 
     void WavetableOsc::makeSineOscillator() {

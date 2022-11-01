@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <vector>
 #include <functional>
+#include <atomic>
+#include "IAudioRender.h"
 
 namespace synthtools {
 
@@ -11,7 +13,7 @@ namespace synthtools {
 
     float interpolation(const std::vector<float> &buffer, float indexPtr);
 
-    class WavetableOsc {
+    class WavetableOsc : public IAudioRender{
     public:
 
         enum class OscillatorType : uint8_t {
@@ -35,20 +37,17 @@ namespace synthtools {
         // Gets oscillator frequency
         float getFrequency() const;
 
+        void setAmplitude(const float amplitude);
+
         // Gets next sample and update the phase
         float process();
 
-        void process(float *bufferToFill, uint32_t numFrames);
-
+        void renderAudio(float *audioData, uint32_t numFrames) override;
     private:
         void updateIncrement();
-
         void makeTriangleOscillator();
-
         void makeSineOscillator();
-
         void makeSquareOscillator();
-
         void makeSawToothOscillator();
 
         OscillatorType _oscillatorType = OscillatorType::SAWTOOTH;
@@ -56,7 +55,8 @@ namespace synthtools {
         float _readPointer = 0.0f;
         float _inverseSampleRate;
         float _freq;
-        float _tableIncrement = 0.0f;
+        float _amplitude = 0.1;
+        std::atomic<float> _tableIncrement = 0.0f;
         bool _useInterpolation = false;
     };
 

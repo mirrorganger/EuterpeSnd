@@ -44,14 +44,17 @@ TEST_F(WavetableOscTest, test_sine_osc) {
     const uint32_t tableSize = 10U;
     const float sampleRate = 44100.0f;
     const float freq = sampleRate / static_cast<float>(tableSize);
+    const float amplitude = .70f;
+
     _buffer.resize(tableSize);
     makeSineOscillator();
+    std::for_each(_buffer.begin(),_buffer.end(),[&amplitude](float& v){v*=amplitude;});
     _waveTableOsc.setUp(WavetableOsc::OscillatorType::SINE, tableSize, sampleRate, true);
     _waveTableOsc.setFrequency(freq);
-
+    _waveTableOsc.setAmplitude(amplitude);
     // WHEN
     std::array<float, tableSize> bufferToFill{};
-    _waveTableOsc.process(bufferToFill.data(), bufferToFill.size());
+    _waveTableOsc.renderAudio(bufferToFill.data(), bufferToFill.size());
 
     // THEN
     ASSERT_THAT(bufferToFill, ElementsAreArray(_buffer));
@@ -62,14 +65,16 @@ TEST_F(WavetableOscTest, test_triangle_osc) {
     const uint32_t tableSize = 100U;
     const float sampleRate = 44100.0f;
     const float freq = sampleRate / static_cast<float>(tableSize);
+    const float amplitude = .50f;
     _buffer.resize(tableSize);
     makeTriangleOscillator();
+    std::for_each(_buffer.begin(),_buffer.end(),[&amplitude](float& v){v*=amplitude;});
     _waveTableOsc.setUp(WavetableOsc::OscillatorType::TRIANGLE, tableSize, sampleRate, true);
     _waveTableOsc.setFrequency(freq);
-
+    _waveTableOsc.setAmplitude(amplitude);
     // WHEN
     std::array<float, tableSize> bufferToFill{};
-    _waveTableOsc.process(bufferToFill.data(), bufferToFill.size());
+    _waveTableOsc.renderAudio(bufferToFill.data(), bufferToFill.size());
 
     // THEN
     ASSERT_THAT(bufferToFill, ElementsAreArray(_buffer));
