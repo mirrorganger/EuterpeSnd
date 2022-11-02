@@ -15,7 +15,7 @@ FUNCTION(__add_dependencies TARGET TARGET_DEPENDS)
 		if (NOT TARGET ${dependency})
 			message(FATAL_ERROR "The dependency target \"${dependency}\" of target \"${TARGET}\" does not exist, please check and reorder the add_subdirectory() base on dependency")
 		endif() 
-		target_link_libraries(${TARGET} ${dependency})
+		target_link_libraries(${TARGET} PUBLIC ${dependency})
 	endforeach()
 ENDFUNCTION()
 

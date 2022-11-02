@@ -5,27 +5,24 @@
 #include <vector>
 #include <functional>
 #include <atomic>
+#include <AudioBufferTools.h>
 #include "IAudioRender.h"
 
 namespace synthtools {
 
-    using BuilderFunc = std::function<void(std::vector < float > &)>;
+    using BuilderFunc = std::function<void(std::vector<float> &)>;
 
     float interpolation(const std::vector<float> &buffer, float indexPtr);
 
-    class WavetableOsc : public IAudioRender{
+    class WavetableOsc : public IAudioRender {
     public:
-
-        enum class OscillatorType : uint8_t {
-            SINE, SAWTOOTH, TRIANGLE, SQUARE, FREE
-        };
 
         WavetableOsc() {}
 
-        WavetableOsc(const OscillatorType oscillatorType, const uint32_t tableSize,
+        WavetableOsc(const utilities::AudioBufferTools::OscillatorType oscillatorType, const uint32_t tableSize,
                      const float sampleRate, const bool useInterpolation = true);
 
-        void setUp(const OscillatorType oscillatorType, const uint32_t tableSize,
+        void setUp(const utilities::AudioBufferTools::OscillatorType oscillatorType, const uint32_t tableSize,
                    const float sampleRate, const bool useInterpolation = true);
 
         void setUp(const uint32_t tableSize, const float sampleRate, BuilderFunc builder,
@@ -43,14 +40,10 @@ namespace synthtools {
         float process();
 
         void renderAudio(float *audioData, uint32_t numFrames) override;
+
     private:
         void updateIncrement();
-        void makeTriangleOscillator();
-        void makeSineOscillator();
-        void makeSquareOscillator();
-        void makeSawToothOscillator();
-
-        OscillatorType _oscillatorType = OscillatorType::SAWTOOTH;
+        utilities::AudioBufferTools::OscillatorType _oscillatorType = utilities::AudioBufferTools::OscillatorType::SAWTOOTH;
         std::vector<float> _buffer;
         float _readPointer = 0.0f;
         float _inverseSampleRate;
