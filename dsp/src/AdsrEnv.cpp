@@ -6,7 +6,7 @@
 #include <cmath>
 #include <cstring>
 
-namespace utilities{
+namespace dsp{
 
 template <typename... Ts> // (7)
 struct Overloaded : Ts... {
@@ -92,8 +92,8 @@ float AdsrEnv::tick() {
 
 void AdsrEnv::applyToBuffer(float *outBuffer, int numSamples){
 
-    auto multVistor = Overloaded{[&](Idle) {AudioBufferTools::clearRawBuffer(outBuffer,numSamples*2);},
-                              [&](Sustain){AudioBufferTools::multiplyRawBuffer(outBuffer,numSamples*2,_envelopeValue);},
+    auto multVistor = Overloaded{[&](Idle) {utilities::AudioBufferTools::clearRawBuffer(outBuffer,numSamples*2);},
+                              [&](Sustain){utilities::AudioBufferTools::multiplyRawBuffer(outBuffer,numSamples*2,_envelopeValue);},
                               [&](auto otherState) {
                                   for (int i = 0; i < numSamples; ++i) {
                                       *outBuffer++ *= tick();

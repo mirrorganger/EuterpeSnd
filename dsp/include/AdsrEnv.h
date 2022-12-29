@@ -1,11 +1,11 @@
-#ifndef EUTERPESND_UTILITES_ADSRENV_H
-#define EUTERPESND_UTILITES_ADSRENV_H
+#ifndef EUTERPESND_DSP_ADSRENV_H
+#define EUTERPESND_DSP_ADSRENV_H
 
 #include "Fsm.h"
 #include "AudioBufferTools.h"
 #include <string>
 
-namespace utilities{
+namespace dsp{
 
 struct Attack {
     std::string_view getName()const{
@@ -60,7 +60,7 @@ struct ExpSection{
     T multiplier;
 };
 
-class AdsrStm : public Fsm<AdsrStm, State> {
+class AdsrStm : public utilities::Fsm<AdsrStm, State> {
 public:
   template <typename CurrentState, typename Event>
   auto processEvent(CurrentState &, const Event &e) {

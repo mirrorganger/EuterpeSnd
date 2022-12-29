@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-using namespace utilities;
+using namespace dsp;
 using namespace testing;
 
 class ADSRTest : public Test {

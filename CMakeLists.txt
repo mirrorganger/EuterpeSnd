@@ -16,9 +16,8 @@ set_property(GLOBAL PROPERTY USE_FOLDER ON)
 enable_testing()
 add_subdirectory(deps/googletest)
 add_subdirectory(utilities)
+add_subdirectory(dsp)
 add_subdirectory(synthtools)
-
-
 
 
 
