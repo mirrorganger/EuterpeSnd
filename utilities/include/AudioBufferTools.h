@@ -4,6 +4,8 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include <cstring>
+#include <cstdint>
 
 namespace utilities{
 
@@ -84,6 +86,16 @@ public:
 
         return (1.0 - weigthAbove) * buffer[idxBelow] +
                weigthAbove * buffer[idxAbove];
+    }
+
+    static void clearRawBuffer(float * buffer, uint32_t bufferSize){
+        std::memset(buffer, 0, sizeof(float) * bufferSize);
+    }
+
+    static void multiplyRawBuffer(float * buffer, uint32_t bufferSize, float value){
+        for (std::size_t i = 0; i < bufferSize; ++i) {
+            buffer[i] *=value;
+        }
     }
 
 
