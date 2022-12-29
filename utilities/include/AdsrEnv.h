@@ -1,27 +1,48 @@
-#ifndef UTILITES_ADSRENV_H
-#define UTILITES_ADSRENV_H
+#ifndef EUTERPESND_UTILITES_ADSRENV_H
+#define EUTERPESND_UTILITES_ADSRENV_H
 
 #include "Fsm.h"
-
-// TODO :Check refs.
-// http://www.martin-finke.de/blog/articles/audio-plugins-011-envelopes/
-// https://www.musicdsp.org/en/latest/Synthesis/189-fast-exponential-envelope-generator.html
-// https://www.earlevel.com/main/2013/06/02/envelope-generators-adsr-part-2/
-// https://svn.linuxsampler.org/cgi-bin/viewvc.cgi/linuxsampler/trunk/src/engines/common/EG.h?revision=2055&view=markup&pathrev=2218
-// https://github.com/linuxsampler/linuxsampler
-// ==============
-// https://github.com/linuxsampler/linuxsampler/blob/master/src/engines/common/EG.h
-// https://github.com/linuxsampler/linuxsampler/blob/master/src/engines/sfz/EGADSR.h
-// TODO: Idea, create a envelope generator base class for ADSR
-
+#include "AudioBufferTools.h"
+#include <string>
 
 namespace utilities{
 
-struct Attack {};
-struct Decay {};
-struct Sustain {};
-struct Release {};
-struct Idle {};
+struct Attack {
+    std::string_view getName()const{
+      return _name;
+    }
+  private:
+    static constexpr std::string_view _name = "attack";
+};
+struct Decay {
+
+  std::string_view getName()const{
+      return _name;
+    }
+  private:
+    static constexpr std::string_view _name = "attack";
+};
+struct Sustain {
+    std::string_view getName()const{
+      return _name;
+    }
+  private:
+    static constexpr std::string_view _name = "sustain";
+};
+struct Release {
+      std::string_view getName()const{
+      return _name;
+    }
+  private:
+    static constexpr std::string_view _name = "release";
+};
+struct Idle {
+      std::string_view getName()const{
+      return _name;
+    }
+  private:
+    static constexpr std::string_view _name = "idle";
+};
 
 using State = std::variant<Idle, Attack, Decay, Sustain, Release>;
 
@@ -61,10 +82,10 @@ public:
 class AdsrEnv {
 public:
   struct Parameters {
-    float attackTimeSec = 0.001f;
-    float decayTimeSec = 0.001f;
-    float sustainLevel = 0.6f;
-    float releaseTimeSec = 0.001f;
+    float attackTimeSec = 0.2f;
+    float decayTimeSec = 0.2f;
+    float sustainLevel = 0.2f;
+    float releaseTimeSec = 0.2f;
   };
 
   AdsrEnv();
@@ -78,7 +99,7 @@ public:
   void release();
   void reset();
   float tick();
-
+  void applyToBuffer(float* outBuffer, int numSamples);
 private:
   void updateRates();
   float getRateMult(float startLevel, float endLevel, uint32_t lengthInSamples);

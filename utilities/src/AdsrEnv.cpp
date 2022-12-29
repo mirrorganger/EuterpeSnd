@@ -4,6 +4,7 @@
 
 #include "AdsrEnv.h"
 #include <cmath>
+#include <cstring>
 
 namespace utilities{
 
@@ -88,6 +89,20 @@ float AdsrEnv::tick() {
   std::visit(visitor, _stm.getState());
   return _envelopeValue;
 }
+
+void AdsrEnv::applyToBuffer(float *outBuffer, int numSamples){
+
+    auto multVistor = Overloaded{[&](Idle) {AudioBufferTools::clearRawBuffer(outBuffer,numSamples*2);},
+                              [&](Sustain){AudioBufferTools::multiplyRawBuffer(outBuffer,numSamples*2,_envelopeValue);},
+                              [&](auto otherState) {
+                                  for (int i = 0; i < numSamples; ++i) {
+                                      *outBuffer++ *= tick();
+                                  }
+                              }};
+
+    std::visit(multVistor,_stm.getState());
+}
+
 
 void AdsrEnv::updateRates() {
     _attackSection.multiplier = getRateMult(_attackSection.overshoot,1.0f + _attackSection.overshoot, static_cast<uint32_t>(_parameters.attackTimeSec*_sampleRate));
