@@ -10,11 +10,14 @@ FUNCTION(find_files_matching_patterns output directory filter_masks)
 ENDFUNCTION()
 
 
-FUNCTION(__add_dependencies TARGET TARGET_DEPENDS)
+FUNCTION(__add_dependencies TARGET TARGET_DEPENDS TARGET_DEPENDS_NO_TARGET)
 	foreach( dependency ${TARGET_DEPENDS} ) 
 		if (NOT TARGET ${dependency})
 			message(FATAL_ERROR "The dependency target \"${dependency}\" of target \"${TARGET}\" does not exist, please check and reorder the add_subdirectory() base on dependency")
 		endif() 
+		target_link_libraries(${TARGET} PUBLIC ${dependency})
+	endforeach()
+	foreach( dependency ${TARGET_DEPENDS_NO_TARGET} ) 
 		target_link_libraries(${TARGET} PUBLIC ${dependency})
 	endforeach()
 ENDFUNCTION()
@@ -22,7 +25,7 @@ ENDFUNCTION()
 FUNCTION(setup_library)
 	set(options UNIT_TEST)
 	set(oneValueArgs NAME PATH COMPONENT)
-	set(multiValueArgs DEPENDS)
+	set(multiValueArgs DEPENDS EXTERNAL_DEPENDS)
 	
 	cmake_parse_arguments(LIBRARY "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -46,7 +49,7 @@ FUNCTION(setup_library)
 		target_include_directories(${LIBRARY_NAME} PRIVATE ${LIBRARY_PATH}src)
 	endif()
 
-	__add_dependencies(${LIBRARY_NAME} "${LIBRARY_DEPENDS}")
+	__add_dependencies(${LIBRARY_NAME} "${LIBRARY_DEPENDS}" "${LIBRARY_EXTERNAL_DEPENDS}")
 	add_dependencies(ALL_COMPILE ${LIBRARY_NAME})
 
 	#target_compile_options(${LIBRARY_NAME} PRIVATE -Wall -Wextra)
@@ -61,23 +64,21 @@ ENDFUNCTION()
 FUNCTION(setup_executable)
 	set(options)
 	set(oneValueArgs NAME)
-	set(multiValueArgs DEPENDS SOURCES)
+	set(multiValueArgs DEPENDS EXTERNAL_DEPENDS)
 	cmake_parse_arguments(EXECUTABLE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 	
-	add_executable(${EXECUTABLE_NAME} ${EXECUTABLE_SOURCES})
+	set(SOURCE_FILES_FILTER_MASK *.cpp *.cc *.h *.hpp)
+
+	find_files_matching_patterns(EXECUTABLE_SOURCES src "${SOURCE_FILES_FILTER_MASK}")
+
+	add_executable(${EXECUTABLE_NAME} "${EXECUTABLE_SOURCES}")
 	set_property(TARGET ${EXECUTABLE_NAME} PROPERTY FOLDER ${EXECUTABLE_NAME})
 	
 	add_dependencies(ALL_COMPILE ${EXECUTABLE_NAME})
 
-	__add_dependencies(${EXECUTABLE_NAME} "${EXECUTABLE_DEPENDS}")
+	__add_dependencies(${EXECUTABLE_NAME} "${EXECUTABLE_DEPENDS}" "${EXECUTABLE_EXTERNAL_DEPENDS}")
 
-	if (MSVC)
-		target_link_options(${EXECUTABLE_NAME} PRIVATE /WX)
-		# 4214 nonstandard extension used : bit field types other than int
-		target_compile_options(${EXECUTABLE_NAME} PRIVATE /W4 /WX /wd4214 -DNOMINMAX)
-	elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-		target_compile_options(${EXECUTABLE_NAME} PRIVATE -Wall -Wextra)
-	endif()
+	target_compile_options(${EXECUTABLE_NAME} PRIVATE -Wall -Wextra)
 
-	install(TARGETS ${EXECUTABLE_NAME} DESTINATION ${CMAKE_BINARY_DIR}/build_artifacts)
+	install(TARGETS ${EXECUTABLE_NAME} DESTINATION ${CMAKE_BINARY_DIR}/products)
 ENDFUNCTION()
