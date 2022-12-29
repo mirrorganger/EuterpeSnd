@@ -17,8 +17,6 @@ namespace synthtools {
     class WavetableOsc : public IAudioRender {
     public:
 
-        WavetableOsc() {}
-
         WavetableOsc(const utilities::AudioBufferTools::OscillatorType oscillatorType, const uint32_t tableSize,
                      const float sampleRate, const bool useInterpolation = true);
 
@@ -28,27 +26,23 @@ namespace synthtools {
         void setUp(const uint32_t tableSize, const float sampleRate, BuilderFunc builder,
                    const bool useInterpolation = true);
 
-        // Sets oscillator frequency
         void setFrequency(const float f);
-
-        // Gets oscillator frequency
-        float getFrequency() const;
 
         void setAmplitude(const float amplitude);
 
         // Gets next sample and update the phase
         float process();
 
+        // Fill an audio buffer with numFrames samples.
         void renderAudio(float *audioData, uint32_t numFrames) override;
 
     private:
         void updateIncrement();
-        utilities::AudioBufferTools::OscillatorType _oscillatorType = utilities::AudioBufferTools::OscillatorType::SAWTOOTH;
         std::vector<float> _buffer;
         float _readPointer = 0.0f;
         float _inverseSampleRate;
         float _freq;
-        float _amplitude = 0.1;
+        float _amplitude = 1.0;
         std::atomic<float> _tableIncrement = 0.0f;
         bool _useInterpolation = false;
     };

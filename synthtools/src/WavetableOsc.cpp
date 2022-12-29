@@ -29,7 +29,6 @@ namespace synthtools {
         _useInterpolation = useInterpolation;
         _readPointer = 0;
         _buffer.resize(tableSize);
-        _oscillatorType = utilities::AudioBufferTools::OscillatorType::FREE;
         builder(_buffer);
     }
 
@@ -37,8 +36,6 @@ namespace synthtools {
         _freq = f;
         updateIncrement();
     }
-
-    float WavetableOsc::getFrequency() const { return _freq; }
 
     void WavetableOsc::setAmplitude(const float amplitude) {
         _amplitude = amplitude;
@@ -50,6 +47,7 @@ namespace synthtools {
         if (_buffer.size() == 0)
             return outValue;
 
+
         if (_useInterpolation)
             outValue = utilities::AudioBufferTools::interpolation(_buffer, _readPointer);
         else
@@ -57,6 +55,9 @@ namespace synthtools {
 
         outValue *= _amplitude;
         _readPointer += _tableIncrement.load();
+        while (static_cast<int>(_readPointer) >= _buffer.size())_readPointer -= static_cast<float>(_buffer.size());
+
+
 
         return outValue;
     }
@@ -66,7 +67,7 @@ namespace synthtools {
             return;
 
         for (uint32_t i = 0; i < numFrames; ++i) {
-            audioData[i] = process();
+            *audioData++ = process();
         }
     }
 

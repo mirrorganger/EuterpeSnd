@@ -13,7 +13,10 @@ using namespace testing;
 
 class WavetableOscTest : public Test {
 public:
-    WavetableOscTest() = default;
+    WavetableOscTest():
+        _waveTableOsc(utilities::AudioBufferTools::OscillatorType::SINE,10U,441000.f)
+    {
+    }
 
     void setUpExpectedBuffer(const utilities::AudioBufferTools::OscillatorType oscType,const uint32_t oscTableSize,const float amplitude){
         _buffer.resize(oscTableSize);
