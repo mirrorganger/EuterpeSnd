@@ -11,7 +11,17 @@
 using namespace synthtools;
 using namespace testing;
 
-class WavetableOscTest : public Test {
+struct ParamType{
+    uint32_t tableSize = 10U;
+    uint32_t framesPerBuffer = 2U;
+    float sampleRate = 44100.0f;
+    float freq = sampleRate / static_cast<float>(tableSize);
+    float amplitude = .70f;
+    utilities::AudioBufferTools::OscillatorType oscType = utilities::AudioBufferTools::OscillatorType::SINE;
+};
+
+
+class WavetableOscTest : public TestWithParam<ParamType> {
 public:
     WavetableOscTest():
         _waveTableOsc(utilities::AudioBufferTools::OscillatorType::SINE,10U,441000.f)
@@ -19,94 +29,77 @@ public:
     }
 
     void setUpExpectedBuffer(const utilities::AudioBufferTools::OscillatorType oscType,const uint32_t oscTableSize,const float amplitude){
-        _buffer.resize(oscTableSize);
-        utilities::AudioBufferTools::makeOscTable(_buffer,oscType);
-        std::for_each(_buffer.begin(), _buffer.end(), [&amplitude](float &v) { v *= amplitude; });
+        _expectedBuffer.resize(oscTableSize * _nChannels);
+        std::vector<float> tempBuffer(oscTableSize);
+        utilities::AudioBufferTools::makeOscTable(tempBuffer,oscType);
+        std::for_each(tempBuffer.begin(), tempBuffer.end(), [&amplitude](float &v) { v *= amplitude; });
+        auto datPtr = _expectedBuffer.data();
+        for (int i = 0; i < tempBuffer.size(); ++i) {
+            for (int j = 0; j < _nChannels ; ++j) {
+                *datPtr++ = tempBuffer[i];
+            }
+        }
     }
 
 protected:
+
+    void setUpOsc(const ParamType& testSettings){
+        _waveTableOsc.setUp(testSettings.oscType, testSettings.tableSize, testSettings.sampleRate, true);
+        _waveTableOsc.setFrequency(testSettings.freq);
+        _waveTableOsc.setAmplitude(testSettings.amplitude);
+    }
+
+    void processBuffer(std::vector<float>& bufferToFill, const uint32_t nSamples, const uint32_t framesPerBuffer){
+        for (int buffer_i = 0; buffer_i < nSamples / framesPerBuffer; ++buffer_i) {
+            size_t offset = buffer_i * framesPerBuffer * _nChannels;
+            utilities::AudioBuffer<float> audioBuffer(bufferToFill.data() + offset,_nChannels,framesPerBuffer);
+            _waveTableOsc.process(audioBuffer);
+        }
+    }
+
     WavetableOsc _waveTableOsc;
-    std::vector<float> _buffer;
+    std::vector<float> _expectedBuffer;
+    constexpr static uint32_t _nChannels = 2U;
 };
 
-TEST_F(WavetableOscTest, test_sine_osc) {
+TEST_P(WavetableOscTest, test_sine_osc) {
     // GIVEN
-    const uint32_t tableSize = 10U;
-    const float sampleRate = 44100.0f;
-    const float freq = sampleRate / static_cast<float>(tableSize);
-    const float amplitude = .70f;
-    const auto oscType = utilities::AudioBufferTools::OscillatorType::SINE;
-    setUpExpectedBuffer(oscType, tableSize, amplitude);
-    _waveTableOsc.setUp(oscType, tableSize, sampleRate, true);
-    _waveTableOsc.setFrequency(freq);
-    _waveTableOsc.setAmplitude(amplitude);
+    ParamType testSettings  = GetParam();
+    setUpExpectedBuffer(testSettings.oscType, testSettings.tableSize, testSettings.amplitude);
+    setUpOsc(testSettings);
+    std::vector<float> bufferToFill;
+    bufferToFill.resize(testSettings.tableSize*_nChannels);
     // WHEN
-    std::array<float, tableSize> bufferToFill{};
-    _waveTableOsc.renderAudio(bufferToFill.data(), bufferToFill.size());
-
+    processBuffer(bufferToFill,testSettings.tableSize,testSettings.framesPerBuffer);
     // THEN
-    ASSERT_THAT(bufferToFill, ElementsAreArray(_buffer));
+    ASSERT_EQ(bufferToFill,_expectedBuffer);
 }
-
-TEST_F(WavetableOscTest, test_triangle_osc) {
-    // GIVEN
-    const uint32_t tableSize = 100U;
-    const float sampleRate = 44100.0f;
-    const float freq = sampleRate / static_cast<float>(tableSize);
-    const float amplitude = .50f;
-    const auto oscType = utilities::AudioBufferTools::OscillatorType::TRIANGLE;
-    setUpExpectedBuffer(oscType, tableSize, amplitude);
-    _waveTableOsc.setUp(oscType, tableSize, sampleRate, true);
-    _waveTableOsc.setFrequency(freq);
-    _waveTableOsc.setAmplitude(amplitude);
-    // WHEN
-    std::array<float, tableSize> bufferToFill{};
-    _waveTableOsc.renderAudio(bufferToFill.data(), bufferToFill.size());
-
-    // THEN
-    ASSERT_THAT(bufferToFill, ElementsAreArray(_buffer));
-}
-
-TEST_F(WavetableOscTest, test_square_osc) {
-    // GIVEN
-    const uint32_t tableSize = 100U;
-    const float sampleRate = 44100.0f;
-    const float freq = sampleRate / static_cast<float>(tableSize);
-    const float amplitude = .50f;
-    const auto oscType = utilities::AudioBufferTools::OscillatorType::SQUARE;
-    setUpExpectedBuffer(oscType, tableSize, amplitude);
-    _waveTableOsc.setUp(oscType, tableSize, sampleRate, true);
-    _waveTableOsc.setFrequency(freq);
-    _waveTableOsc.setAmplitude(amplitude);
-    // WHEN
-    std::array<float, tableSize> bufferToFill{};
-    _waveTableOsc.renderAudio(bufferToFill.data(), bufferToFill.size());
-
-    // THEN
-    ASSERT_THAT(bufferToFill, ElementsAreArray(_buffer));
-}
-
-TEST_F(WavetableOscTest, test_sawtooth_osc) {
-    // GIVEN
-    const uint32_t tableSize = 100U;
-    const float sampleRate = 44100.0f;
-    const float freq = sampleRate / static_cast<float>(tableSize);
-    const float amplitude = .50f;
-    const auto oscType = utilities::AudioBufferTools::OscillatorType::SAWTOOTH;
-    setUpExpectedBuffer(oscType, tableSize, amplitude);
-    _waveTableOsc.setUp(oscType, tableSize, sampleRate, true);
-    _waveTableOsc.setFrequency(freq);
-    _waveTableOsc.setAmplitude(amplitude);
-    // WHEN
-    std::array<float, tableSize> bufferToFill{};
-    _waveTableOsc.renderAudio(bufferToFill.data(), bufferToFill.size());
-
-    // THEN
-    ASSERT_THAT(bufferToFill, ElementsAreArray(_buffer));
-}
-
-
-
+INSTANTIATE_TEST_SUITE_P(
+        OscTypesTest,
+        WavetableOscTest,
+        Values(
+                ParamType{.oscType = utilities::AudioBufferTools::OscillatorType::SINE},
+                ParamType{.oscType = utilities::AudioBufferTools::OscillatorType::TRIANGLE},
+                ParamType{.oscType = utilities::AudioBufferTools::OscillatorType::SQUARE},
+                ParamType{.oscType = utilities::AudioBufferTools::OscillatorType::SAWTOOTH}
+        ),[](const TestParamInfo<ParamType>&info){
+                switch (info.param.oscType) {
+                    case utilities::AudioBufferTools::OscillatorType::SINE:
+                        return "sineOsc";
+                        break;
+                    case utilities::AudioBufferTools::OscillatorType::TRIANGLE:
+                        return "triangleOsc";
+                        break;
+                    case utilities::AudioBufferTools::OscillatorType::SQUARE:
+                        return "squareOsc";
+                        break;
+                    case utilities::AudioBufferTools::OscillatorType::SAWTOOTH:
+                        return "sawtoothOsc";
+                        break;
+                    default:
+                        return "none";
+                }
+        });
 
 
 

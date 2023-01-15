@@ -38,7 +38,7 @@ namespace synthtools {
     }
 
     void WavetableOsc::setAmplitude(const float amplitude) {
-        _amplitude = amplitude;
+        _amplitude  = amplitude;
     }
 
     float WavetableOsc::process() {
@@ -62,12 +62,19 @@ namespace synthtools {
         return outValue;
     }
 
-    void WavetableOsc::renderAudio(float *audioData, uint32_t numFrames) {
+    void WavetableOsc::process(utilities::AudioBuffer<float>& buffer) {
+        
         if (_buffer.size() == 0)
             return;
 
-        for (uint32_t i = 0; i < numFrames; ++i) {
-            *audioData++ = process();
+        auto wrPtr = buffer.getWritePointer();
+
+        for (uint32_t sample_i = 0; sample_i < buffer.getFramesPerBuffer(); ++sample_i) {
+            auto sample = process();
+            for (size_t channel_i = 0; channel_i < buffer.getNumberOfChannels(); channel_i++)
+            {
+                *wrPtr++ = sample;
+            }
         }
     }
 

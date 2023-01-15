@@ -6,7 +6,7 @@
 #include <functional>
 #include <atomic>
 #include <AudioBufferTools.h>
-#include "IAudioRender.h"
+#include "AudioBuffer.h"
 
 namespace synthtools {
 
@@ -14,7 +14,7 @@ namespace synthtools {
 
     float interpolation(const std::vector<float> &buffer, float indexPtr);
 
-    class WavetableOsc : public IAudioRender {
+    class WavetableOsc : public utilities::AudioProcessor<float> {
     public:
 
         WavetableOsc(const utilities::AudioBufferTools::OscillatorType oscillatorType, const uint32_t tableSize,
@@ -33,8 +33,7 @@ namespace synthtools {
         // Gets next sample and update the phase
         float process();
 
-        // Fill an audio buffer with numFrames samples.
-        void renderAudio(float *audioData, uint32_t numFrames) override;
+        void process(utilities::AudioBuffer<float>& buffer);
 
     private:
         void updateIncrement();
