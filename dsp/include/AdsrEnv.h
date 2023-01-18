@@ -3,6 +3,7 @@
 
 #include "Fsm.h"
 #include "AudioBufferTools.h"
+#include "AudioBuffer.h"
 #include <string>
 
 namespace dsp{
@@ -54,7 +55,6 @@ struct NoteOffEvt {};
 
 template<typename T>
 struct ExpSection{
-    T length;
     T overshoot;
     T offset;
     T multiplier;
@@ -79,7 +79,7 @@ public:
   auto processEvent(Release &, const TargetLevelReached &e) { return Idle(); }
 };
 
-class AdsrEnv {
+class AdsrEnv : public utilities::AudioProcessor<float> {
 public:
   struct Parameters {
     float attackTimeSec = 0.2f;
@@ -88,7 +88,7 @@ public:
     float releaseTimeSec = 0.2f;
   };
 
-  AdsrEnv();
+  AdsrEnv() = default;
   void configure(const Parameters& param);
   void setSampleRate(float sampleRate);
   void setAttackTime(float attackTimeSec);
@@ -100,13 +100,14 @@ public:
   void reset();
   float tick();
   void applyToBuffer(float* outBuffer, int numSamples);
+  void process(utilities::AudioBuffer<float>& buffer) override;
 private:
   void updateRates();
   float getRateMult(float startLevel, float endLevel, uint32_t lengthInSamples);
   Parameters _parameters;
-  ExpSection<float> _attackSection;
-  ExpSection<float> _decaySection;
-  ExpSection<float> _releaseSection;
+  ExpSection<float> _attackSection = {0.0,0.3,0.0};
+  ExpSection<float> _decaySection = {0.0,0.3,0.0};;
+  ExpSection<float> _releaseSection =  {0.0,0.3,0.0};;
   float _envelopeValue = 0.0f;
   float _sampleRate = 0.0f;
   AdsrStm _stm;

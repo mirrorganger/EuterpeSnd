@@ -14,12 +14,6 @@ struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-AdsrEnv::AdsrEnv() {
-    _attackSection.overshoot = 0.3;
-    _releaseSection.overshoot = 0.3;
-    _decaySection.overshoot = 0.3;
-}
-
 void AdsrEnv::configure(const AdsrEnv::Parameters &param) {
   _parameters = param;
 }
