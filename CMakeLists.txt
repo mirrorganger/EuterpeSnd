@@ -18,7 +18,7 @@ add_subdirectory(deps/googletest)
 add_subdirectory(utilities)
 add_subdirectory(dsp)
 add_subdirectory(synthtools)
-
+add_subdirectory(audioDevice)
 
 
 
