@@ -14,7 +14,7 @@ int main(){
     params.sampleRateHz = 44'100U;
     auto outputDevice = audioDevice::AudioDeviceBuilder::createOutputDevice(params);
 
-    synthtools::SynthVoice voice(static_cast<float>(params.sampleRateHz),utilities::AudioBufferTools::OscillatorType::SQUARE); 
+    synthtools::SynthVoice voice(static_cast<float>(params.sampleRateHz),utilities::AudioBufferTools::OscillatorType::SINE); 
     outputDevice->setAudioProcessor(voice);
 
     if(outputDevice->open()){
@@ -22,7 +22,6 @@ int main(){
         voice.noteOn(40U,100U);
         char input;
         do{
-            std::cout<< std::endl;
             std::cin  >> input;
             if(input == '+'){
                 ++initialPitch;
