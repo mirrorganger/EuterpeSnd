@@ -14,12 +14,6 @@ struct Overloaded : Ts... {
 };
 template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
-AdsrEnv::AdsrEnv() {
-    _attackSection.overshoot = 0.3;
-    _releaseSection.overshoot = 0.3;
-    _decaySection.overshoot = 0.3;
-}
-
 void AdsrEnv::configure(const AdsrEnv::Parameters &param) {
   _parameters = param;
 }
@@ -47,14 +41,17 @@ bool AdsrEnv::isActive() const {
 }
 
 void AdsrEnv::trigger() {
+    _envelopeValue = _minimumLevel;
+    _currentSectionSample = 0U;
   _stm.transition(NoteOnEvt());
 }
 void AdsrEnv::release() {
+    _currentSectionSample = 0U;
   _stm.transition(NoteOffEvt{});
 }
 
 void AdsrEnv::reset() {
-  _envelopeValue = 0.0f;
+  _envelopeValue = _minimumLevel;
 }
 
 /**
@@ -63,58 +60,68 @@ void AdsrEnv::reset() {
  * @return
  */
 float AdsrEnv::tick() {
-  auto visitor = Overloaded{[&](Idle) { _envelopeValue = 0.0f; },
+  auto visitor = Overloaded{[&](Idle) { _envelopeValue = 0.0f;},
                             [&](Attack) {
-                                _envelopeValue = _attackSection.offset + _envelopeValue * _attackSection.multiplier;
-                              if (_envelopeValue >= 1.0) {
+                                _envelopeValue *= _attackSection.advanceMultiplier;
+                                _currentSectionSample++;
+                                if (_currentSectionSample ==  _attackSection.length) {
                                   _envelopeValue = 1.0;
+                                  _currentSectionSample = 0U;
                                   _stm.transition(TargetLevelReached{});
                               }
                             },
                             [&](Decay) {
-                                _envelopeValue = _decaySection.offset + _envelopeValue * _decaySection.multiplier;
-                                if (_envelopeValue <= _parameters.sustainLevel) {
+                                _envelopeValue *= _decaySection.advanceMultiplier;
+                                _currentSectionSample++;
+                                if (_currentSectionSample ==  _decaySection.length) {
                                     _envelopeValue = _parameters.sustainLevel;
+                                    _currentSectionSample = 0U;
                                     _stm.transition(TargetLevelReached{});
                                 }
                             },
                             [&](Sustain) {},
                             [&](Release) {
-                                _envelopeValue = _releaseSection.offset + _envelopeValue * _releaseSection.multiplier;
-                                if (_envelopeValue <= 0.0) {
-                                    _envelopeValue = 0.0;
+                                _envelopeValue *= _releaseSection.advanceMultiplier;
+                                _currentSectionSample++;
+                                if (_currentSectionSample == _releaseSection.length) {
+                                    _currentSectionSample = 0U;
+                                    //_envelopeValue = _minimumLevel;
                                     _stm.transition(TargetLevelReached{});
                                 }
                             }};
   std::visit(visitor, _stm.getState());
-  return _envelopeValue;
+  return static_cast<float>(_envelopeValue);
 }
 
-void AdsrEnv::applyToBuffer(float *outBuffer, int numSamples){
+void AdsrEnv::process(utilities::AudioBuffer<float> &buffer) {
+    auto multVisitor = Overloaded{[&](Idle) {utilities::AudioBufferTools::clearRawBuffer(buffer.getWritePointer(),buffer.getNumberOfChannels()*buffer.getFramesPerBuffer());},
+                                 [&](Sustain){utilities::AudioBufferTools::multiplyRawBuffer(buffer.getWritePointer(),buffer.getNumberOfChannels()*buffer.getFramesPerBuffer(),_envelopeValue);},
+                                 [&](auto otherState) {
+                                     auto wrtPtr = buffer.getWritePointer();
+                                     for (int sample_i = 0; sample_i < buffer.getFramesPerBuffer(); ++sample_i) {
+                                         auto multCached = tick();
+                                         for (int channel_i = 0; channel_i < buffer.getNumberOfChannels() ; ++channel_i) {
+                                             (*wrtPtr) *= multCached;
+                                             wrtPtr++;
+                                         }
+                                     }
+                                 }};
 
-    auto multVistor = Overloaded{[&](Idle) {utilities::AudioBufferTools::clearRawBuffer(outBuffer,numSamples*2);},
-                              [&](Sustain){utilities::AudioBufferTools::multiplyRawBuffer(outBuffer,numSamples*2,_envelopeValue);},
-                              [&](auto otherState) {
-                                  for (int i = 0; i < numSamples; ++i) {
-                                      *outBuffer++ *= tick();
-                                  }
-                              }};
-
-    std::visit(multVistor,_stm.getState());
+    std::visit(multVisitor,_stm.getState());
 }
 
 
 void AdsrEnv::updateRates() {
-    _attackSection.multiplier = getRateMult(_attackSection.overshoot,1.0f + _attackSection.overshoot, static_cast<uint32_t>(_parameters.attackTimeSec*_sampleRate));
-    _attackSection.offset = (1.f + _attackSection.overshoot) * (1.f - _attackSection.multiplier);
-    _decaySection.multiplier = getRateMult(_decaySection.overshoot,1.0f + _decaySection.overshoot, static_cast<uint32_t>(_parameters.decayTimeSec*_sampleRate));
-    _decaySection.offset = (_parameters.sustainLevel -_decaySection.overshoot) * (1.f - _decaySection.multiplier);
-    _releaseSection.multiplier = getRateMult(_releaseSection.overshoot,1.0f + _releaseSection.overshoot, static_cast<uint32_t>(_parameters.releaseTimeSec*_sampleRate));
-    _releaseSection.offset = (-_releaseSection.overshoot) * (1.f - _releaseSection.multiplier);
+    _attackSection.length = static_cast<uint64_t>(_parameters.attackTimeSec * _sampleRate);
+    _attackSection.advanceMultiplier = getRateMult(_minimumLevel,1.0, _parameters.attackTimeSec);
+    _decaySection.length = static_cast<uint64_t>(_parameters.decayTimeSec * _sampleRate);
+    _decaySection.advanceMultiplier  = getRateMult(1.0,_parameters.sustainLevel,_parameters.decayTimeSec);
+    _releaseSection.length = static_cast<uint64_t>(_parameters.releaseTimeSec * _sampleRate);
+    _releaseSection.advanceMultiplier = getRateMult(_parameters.sustainLevel,_minimumLevel,_parameters.releaseTimeSec);
+}
+double AdsrEnv::getRateMult(double startLevel, double endLevel, double intervalTimeSec) {
+        return 1.0 + (log(endLevel) - log(startLevel)) / (intervalTimeSec * _sampleRate);
 }
 
-float AdsrEnv::getRateMult(float startLevel, float endLevel, uint32_t lengthInSamples) {
-        return expf(-logf(endLevel/ startLevel) / static_cast<float>(lengthInSamples));
-}
 
 }

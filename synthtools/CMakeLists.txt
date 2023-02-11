@@ -1,1 +1,1 @@
-setup_library(NAME synthtools DEPENDS utilities UNIT_TEST)
+setup_library(NAME synthtools DEPENDS utilities dsp UNIT_TEST)
