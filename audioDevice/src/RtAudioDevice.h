@@ -22,9 +22,7 @@ public:
                                       RtAudioStreamStatus status,
                                      void *userData ){
       RtAudioDevice* _this = (RtAudioDevice*)(userData);
-      float * tempOutputBuffer = (float*)outputBuffer;
-      float * tempInputBuffer = (float*)outputBuffer;                                 
-      _this->audioCallback(tempOutputBuffer,tempInputBuffer,nFrames);
+      _this->audioCallback((float*)outputBuffer,(float*)outputBuffer,nFrames);
       return 0;
     }
 

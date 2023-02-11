@@ -3,8 +3,8 @@
 
 namespace synthtools{
 
-SynthVoice::SynthVoice(float sampleRate) :
-        _wavetableOsc(utilities::AudioBufferTools::OscillatorType::SINE,1000U,sampleRate,true)
+SynthVoice::SynthVoice(float sampleRate, utilities::AudioBufferTools::OscillatorType oscType) :
+        _wavetableOsc(oscType,1000U,sampleRate,true)
 {
     _env.setSampleRate(sampleRate);
 }
@@ -23,7 +23,7 @@ void SynthVoice::process(utilities::AudioBuffer<float> &buffer) {
     // Do all operations with just one buffer?
     // Replicate process
     _wavetableOsc.process(buffer);
-
+    _env.process(buffer);
 }
 
 }

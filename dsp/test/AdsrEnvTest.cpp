@@ -124,7 +124,6 @@ TEST_F(ADSRTest, completeAnEnvelope){
     _adsrEnv.release();
     val = advanceEnv(_adsrEnv,ticksRelease);
     // THEN
-    // EXPECT_FLOAT_EQ(val,minimumLevel);
     //// IDLE
     EXPECT_TRUE(!_adsrEnv.isActive());
 }

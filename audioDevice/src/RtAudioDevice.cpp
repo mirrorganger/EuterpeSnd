@@ -28,7 +28,7 @@ bool RtAudioDevice::open(){
   streamParameters.firstChannel = 0U;
 
   try {
-    _dacInterface.openStream(&streamParameters, nullptr, RTAUDIO_FLOAT64, _deviceParameters.sampleRateHz,
+    _dacInterface.openStream(&streamParameters, nullptr, RTAUDIO_FLOAT32, _deviceParameters.sampleRateHz,
                         &_deviceParameters.framesPerBuffer, &RtAudioDevice::RtAudioCallbackHandler, (void *)(this));
 	_dacInterface.startStream();
   } catch (RtAudioErrorType &e) {

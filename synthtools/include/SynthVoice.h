@@ -10,7 +10,8 @@
 namespace  synthtools
 {
     class SynthVoice : public utilities::AudioProcessor<float> {
-        SynthVoice(float sampleRate);
+    public:
+        SynthVoice(float sampleRate,utilities::AudioBufferTools::OscillatorType oscType = utilities::AudioBufferTools::OscillatorType::SINE);
         void noteOn(uint8_t pitch, uint8_t velocity);
         void noteOff(uint8_t pitch);
         void process(utilities::AudioBuffer<float>& buffer) override;
