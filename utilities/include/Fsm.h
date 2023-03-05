@@ -3,11 +3,16 @@
 
 #include <variant>
 #include <optional>
+#include <iostream>
 
 namespace utilities{
+
+
+    template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+
     template <typename Derived, typename StateType> class Fsm {
     public:
-        const StateType &getState() const { return _currenState; }
+        const StateType &getState() const { return _currentState; }
 
         template <typename Event>
         void transition(Event &&event) {
@@ -22,14 +27,17 @@ namespace utilities{
                         */
                         return _this.processEvent(_state, std::forward<Event>(event));
                     },
-                    _currenState);
+                    _currentState);
 
-            if (nextState)
-                _currenState = *std::move(nextState);
+            if (nextState){
+                //std::cout << std::visit(printName(),_currentState) << "->";
+                _currentState = *std::move(nextState);
+                //std::cout << std::visit(printName(),_currentState) << std::endl;
+            }
         }
 
     private:
-        StateType _currenState;
+        StateType _currentState;
     };
 
 }

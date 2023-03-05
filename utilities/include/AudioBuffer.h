@@ -3,6 +3,8 @@
 
 #include <cstdint>
 #include <stdlib.h>
+#include <limits.h>
+#include <algorithm>
 
 namespace utilities {
 
@@ -16,23 +18,27 @@ namespace utilities {
 
         }
 
-        DataType *getWritePointer() {
+        [[nodiscard]] DataType *getWritePointer() {
             return _data;
         }
 
-        DataType &operator[](size_t n) {
+        [[nodiscard]] DataType *getReadPointer() const {
+            return _data;
+        }
+
+        [[nodiscard]] DataType &operator[](size_t n) {
             return _data[n];
         }
 
-        DataType operator[](size_t n) const {
+        [[nodiscard]] DataType operator[](size_t n) const {
             return _data[n];
         }
 
-        uint32_t getNumberOfChannels() const {
+        [[nodiscard]] uint32_t getNumberOfChannels() const {
             return _nChannels;
         }
 
-        uint32_t getFramesPerBuffer() const {
+        [[nodiscard]] uint32_t getFramesPerBuffer() const {
             return _framesPerBuffer;
         }
 
@@ -67,5 +73,18 @@ namespace utilities {
             }
         }
     }
+
+    template<typename DataType>
+    DataType getChannelMag(const AudioBuffer<DataType>& buffer, uint32_t startSample, uint32_t numSamples, uint32_t channel){
+        auto readPtr = buffer.getReadPointer();
+        auto channelMag = std::numeric_limits<DataType>::min();
+        for (uint32_t i = startSample; i < startSample+numSamples; i++)
+        {
+            channelMag = std::max(readPtr[i*buffer.getNumberOfChannels()+channel],channelMag);
+        }
+        return channelMag;
+    }
+
+
 }
 #endif

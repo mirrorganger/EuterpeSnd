@@ -2,8 +2,6 @@
 
 #include <gmock/gmock.h>
 
-#include <iostream>
-
 using namespace dsp;
 using namespace testing;
 

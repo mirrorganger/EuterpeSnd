@@ -1,16 +1,21 @@
 #ifndef EUTERPESND_DSP_BIQUAD_FILTER
 #define EUTERPESND_DSP_BIQUAD_FILTER
 
+#include "AudioBuffer.h"
+
 #include <cmath>
 #include <cstdint>
-namespace dsp
+#include <vector>
 
+namespace dsp
 {
 
-class BiquadFilter {
+using NumericDataType = float;
 
+class BiquadFilter : utilities::AudioProcessor<NumericDataType>
+{
 public:
-    enum class Type {
+    enum class Type  : uint8_t{
         LOWPASS,
         HIGHPASS,
         BANDPASS
@@ -22,6 +27,7 @@ public:
        double qFactor;
        double cutoffFreq;
        Type filterType;
+       uint32_t nChannels;
     };
 
     struct BiquadCoeff{
@@ -33,27 +39,25 @@ public:
 
     void setUp(const FilterSettings& filterSettings);
 
+    // TODO :All these setters call to update, and change the 
+    // biquad coeficients from another thread. Create a spin lock mutex??
     void setQfactor(double qFactor);
     void setType(Type filterType);
     void setCentralFreq(double centralFreq);
     void clear();
-    float process(float inSample);
-    void processBlock(float *inBuffer,float * outBuffer,uint32_t numSamples);
-
+    void process(utilities::AudioBuffer<NumericDataType>& buffer);
+    
 private:
+    void reset();
     void update();
+    void snapToZero();
     FilterSettings _filterSettings{0};
-    double _z1, _z2;
+    std::vector<double> _z1{},_z2{};
     BiquadCoeff _biquadCoeff;
 };
 
 
-inline float BiquadFilter::process(float inSample){
-    double out = _biquadCoeff.b0 * inSample + _z1;
-    _z1 = (inSample * _biquadCoeff.b1) - (_biquadCoeff.a1 * out) + _z2;
-    _z2 = (inSample * _biquadCoeff.b2) - (_biquadCoeff.a2 * out);  
-    return out;
-}
+
 
 
 

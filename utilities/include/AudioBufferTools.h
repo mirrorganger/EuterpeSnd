@@ -62,6 +62,16 @@ public:
     });
   }
 
+  static MonoBuffer makeSineWave(double freq, double sampleRate, uint32_t numSamples){
+    std::vector<float> buffer(numSamples);
+    std::generate(buffer.begin(), buffer.end(), [&, n = 0]() mutable {
+      return static_cast<float>(std::sin(2.0 * M_PIf64 * static_cast<double>(n++) * freq /
+                  static_cast<double >(buffer.size())));
+    });
+    return buffer;
+  }
+
+
   static void makeSquareTable(MonoBuffer &buffer) {
     std::fill(buffer.begin(), buffer.begin() + buffer.size() / 2, 1.0);
     std::fill(buffer.begin() + buffer.size() / 2, buffer.end(), -1.0);
@@ -111,6 +121,8 @@ public:
       }
     }
   }
+
+
 };
 
 } // namespace utilities

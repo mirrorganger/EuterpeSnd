@@ -9,12 +9,13 @@ using namespace std::chrono_literals;
 int main(){
 
     audioDevice::DeviceParameters params;
+    bool filterEnabled = false; 
     params.framesPerBuffer = 256U;
     params.nChannels = 2U;
     params.sampleRateHz = 44'100U;
     auto outputDevice = audioDevice::AudioDeviceBuilder::createOutputDevice(params);
 
-    synthtools::SynthVoice voice(static_cast<float>(params.sampleRateHz),utilities::AudioBufferTools::OscillatorType::SINE); 
+    synthtools::SynthVoice voice(static_cast<float>(params.sampleRateHz), params.nChannels ,utilities::AudioBufferTools::OscillatorType::SINE);
     outputDevice->setAudioProcessor(voice);
 
     if(outputDevice->open()){
@@ -39,7 +40,11 @@ int main(){
                 std::cout << "Stopping \n";
                 voice.noteOff(initialPitch);
             }
-
+            else if(input == 'f'){
+                filterEnabled = !filterEnabled;
+                std::cout << "Filter enabled "<< filterEnabled << "\n";
+                voice.setFilterEnabled(filterEnabled);
+            }
         }   
         while(input != 'q');
         
