@@ -3,7 +3,6 @@
 #include "Conversions.h"
 #include <vector>
 #include <array>
-#include <iostream>
 
 #include <gmock/gmock.h>
 
@@ -30,15 +29,14 @@ void testFilter(const BiquadFilter::FilterSettings& settings,const double freq, 
 
     BiquadFilter filter(settings);
 
-    auto buffer = utilities::AudioBufferTools::makeSineWave(freq, settings.samplingFreq, static_cast<uint32_t>(numSamples));
-    utilities::AudioBuffer<float> audioBuffer(buffer.data(),settings.nChannels,buffer.size());
+    auto buffer = utilities::AudioBufferTools::makeSineWave(freq, settings.samplingFreq, static_cast<uint32_t>(numSamples),settings.nChannels);
+    utilities::AudioBuffer<float> audioBuffer(buffer.data(),settings.nChannels,numSamples);
 
     filter.process(audioBuffer);
     auto halfSamples = audioBuffer.getFramesPerBuffer()/2U;
     for(size_t channel_i = 0U; channel_i < settings.nChannels;++channel_i){
         auto maxVal = utilities::getChannelMag(audioBuffer, halfSamples, halfSamples - 1, channel_i);
         auto magDb = utilities::fromGainToDecibels(maxVal);
-        std::cout << "Cuttoff freq = " << settings.cutoffFreq << ", f = " << freq <<", Max val=" << maxVal <<", Mag Db ="<<  magDb << std::endl;
         EXPECT_NEAR(magDb,expectedGain,allowedError);
     }
 }
@@ -59,7 +57,7 @@ TEST_P(BiquadFilterTest, filterTest){
    auto param = GetParam();
    BiquadFilter::FilterSettings settings{};
    settings.cutoffFreq = param.cutoffFreq;
-   settings.nChannels = 1U;
+   settings.nChannels = 2U;
    settings.qFactor = _qFactor;
    settings.samplingFreq = _samplingFreq;
    settings.filterType = param.type;
