@@ -24,6 +24,13 @@ namespace utilities{
     };
 
 
+    template<typename DataType>
+    inline DataType fromGainToDecibels(DataType gain, DataType minimumLevelDb = (DataType) -100){
+        return (gain > (DataType) 0) ? std::max(std::log10(gain) * static_cast<DataType>(20),minimumLevelDb) : minimumLevelDb; 
+    }
+
 }
+
+
 
 #endif //EUTERPESND_CONVERSIONS_H

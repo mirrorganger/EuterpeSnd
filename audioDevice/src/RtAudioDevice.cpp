@@ -54,7 +54,7 @@ void RtAudioDevice::setAudioProcessor(utilities::AudioProcessor<float>& processo
 }
 
 void RtAudioDevice::audioCallback(float* outputBuffer, float* inputBuffer, uint32_t numberOfFrames){
-    // TODO : way of checking the parameters are actually what we set precviuously
+    // TODO : way of checking the parameters are actually what we set previously
     utilities::AudioBuffer<float> audioBuffer(outputBuffer,_deviceParameters.nChannels,_deviceParameters.framesPerBuffer);
         if(_audioProcessor!=nullptr){
           _audioProcessor->process(audioBuffer);

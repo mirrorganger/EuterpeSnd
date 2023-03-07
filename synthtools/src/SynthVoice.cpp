@@ -3,15 +3,16 @@
 
 namespace synthtools{
 
-SynthVoice::SynthVoice(float sampleRate, utilities::AudioBufferTools::OscillatorType oscType) :
+SynthVoice::SynthVoice(float sampleRate, uint32_t nChannels, utilities::AudioBufferTools::OscillatorType oscType) :
         _wavetableOsc(oscType,1000U,sampleRate,true)
 {
     _env.setSampleRate(sampleRate);
+    _filter.setUp(dsp::BiquadFilter::FilterSettings{sampleRate,0.707f,200.0,dsp::BiquadFilter::Type::HIGHPASS,nChannels});
 }
 
 void SynthVoice::noteOn(uint8_t pitch, uint8_t velocity) {
     auto freq = utilities::Conversions::pitchToFrequency(pitch);
-    _wavetableOsc.setFrequency(freq);
+    _wavetableOsc.setFrequency(static_cast<float>(freq));
     _env.trigger();
 }
 
@@ -24,6 +25,11 @@ void SynthVoice::process(utilities::AudioBuffer<float> &buffer) {
     // Replicate process
     _wavetableOsc.process(buffer);
     _env.process(buffer);
+    if(_filterEnabled) _filter.process(buffer);
+}
+
+void SynthVoice::setFilterEnabled(bool enable){
+    _filterEnabled = enable;
 }
 
 }
