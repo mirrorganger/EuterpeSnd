@@ -2,8 +2,8 @@
 #define EUTERPESND_UTILITIES_AUDIOBUFFER_H
 
 #include <cstdint>
-#include <stdlib.h>
-#include <limits.h>
+#include <cstdlib>
+#include <limits>
 #include <algorithm>
 
 namespace utilities {
