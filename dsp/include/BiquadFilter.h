@@ -50,7 +50,6 @@ public:
 private:
     void reset();
     void update();
-    void snapToZero();
     FilterSettings _filterSettings{0};
     std::vector<double> _z1{},_z2{};
     BiquadCoeff _biquadCoeff;

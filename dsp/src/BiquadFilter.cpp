@@ -63,7 +63,6 @@ namespace dsp {
                 float cached = buffer[sampleOffset + channel];
                 buffer[sampleOffset + channel] = processInternal(cached, _z1[channel], _z2[channel], _biquadCoeff);
             }
-            //snapToZero();
         }
 
     }
@@ -104,15 +103,5 @@ namespace dsp {
                 break;
         }
     }
-
-
-    void BiquadFilter::snapToZero() {
-        for (auto v: {_z1, _z2}) {
-            for (auto &n: v) {
-                if (!(n < -1.0e-8f || n > 1.0e-8f)) n = 0;
-            }
-        }
-    }
-
 
 } // namespace AudioUtilities
