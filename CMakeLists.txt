@@ -9,6 +9,8 @@ include(cmake/CmakeHelpers.cmake)
 include(cmake/TestingHelpers.cmake)
 include(cmake/StaticAnalyzers.cmake)
 
+option(BUILD_APPS OFF)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_EXPORT_COMPILE_COMMANDS True)
@@ -19,8 +21,10 @@ add_subdirectory(deps/rtaudio)
 add_subdirectory(utilities)
 add_subdirectory(dsp)
 add_subdirectory(synthtools)
-add_subdirectory(audioDevice)
-add_subdirectory(apps)
 
+if(BUILD_APPS)
+    add_subdirectory(audioDevice)
+    add_subdirectory(apps)
+endif()
 
 
