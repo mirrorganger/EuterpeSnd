@@ -16,6 +16,7 @@ template <class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;
 
 void AdsrEnv::configure(const AdsrEnv::Parameters &param) {
   _parameters = param;
+  updateRates();
 }
 
 void AdsrEnv::setSampleRate(float sampleRate) {
