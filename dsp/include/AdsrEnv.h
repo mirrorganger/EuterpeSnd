@@ -6,6 +6,8 @@
 #include "AudioBuffer.h"
 #include <string>
 #include <iostream>
+#include <chrono>
+using namespace std::chrono_literals;
 
 namespace dsp {
 
@@ -105,11 +107,12 @@ namespace dsp {
 
     class AdsrEnv : public utilities::AudioProcessor<float> {
     public:
+        using SecondsDur = std::chrono::duration<double>;
         struct Parameters {
-            double attackTimeSec = 0.2f;
-            double decayTimeSec = 0.2f;
-            double sustainLevel = 0.2f;
-            double releaseTimeSec = 0.2f;
+            std::chrono::duration<double,std::milli>  attackTime = 200ms;
+            std::chrono::duration<double,std::milli>  decayTime  = 200ms;
+            double  sustainLevel = 1.0f;
+            std::chrono::duration<double,std::milli>  releaseTime = 200ms;
         };
 
         AdsrEnv() = default;
@@ -118,11 +121,11 @@ namespace dsp {
 
         void setSampleRate(float sampleRate);
 
-        void setAttackTime(float attackTimeSec);
+        void setAttackTime(std::chrono::duration<double, std::milli> attackTime);
 
-        void setReleaseTime(float releaseTimeSec);
+        void setReleaseTime(std::chrono::duration<double, std::milli> releaseTimeSec);
 
-        void setDecayTime(float decayTimeSec);
+        void setDecayTime(std::chrono::duration<double, std::milli> decayTimeSec);
 
         bool isActive() const;
 
@@ -139,7 +142,7 @@ namespace dsp {
     private:
         void updateRates();
 
-        double getRateMult(double startLevel, double endLevel, double interlvalTimeSec);
+        double getRateMult(double startLevel, double endLevel, SecondsDur interlvalTimeSec);
 
         Parameters _parameters;
         ExpSection<double> _attackSection;

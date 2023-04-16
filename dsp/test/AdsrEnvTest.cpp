@@ -4,6 +4,7 @@
 
 using namespace dsp;
 using namespace testing;
+using namespace std::chrono_literals;
 
 /**
  *
@@ -20,12 +21,12 @@ using namespace testing;
  */
 
 template<typename T>
-static bool isBufferDecreasing(const utilities::AudioBuffer<T>& buffer){
-    for (uint32_t channel = 0; channel < buffer.getNumberOfChannels() ; ++channel) {
+static bool isBufferDecreasing(const utilities::AudioBuffer<T> &buffer) {
+    for (uint32_t channel = 0; channel < buffer.getNumberOfChannels(); ++channel) {
         T prevSample = std::numeric_limits<T>::max();
-        for (int sample = 0; sample < buffer.getFramesPerBuffer() ; ++sample) {
+        for (int sample = 0; sample < buffer.getFramesPerBuffer(); ++sample) {
             auto currentSample = buffer[sample * buffer.getNumberOfChannels() + channel];
-            if(currentSample >= prevSample){
+            if (currentSample >= prevSample) {
                 std::cout << currentSample << ", " << prevSample;
                 return false;
             }
@@ -36,12 +37,12 @@ static bool isBufferDecreasing(const utilities::AudioBuffer<T>& buffer){
 }
 
 template<typename T>
-static bool isBufferIncreasing(const utilities::AudioBuffer<T>& buffer){
-    for (uint32_t channel = 0; channel < buffer.getNumberOfChannels() ; ++channel) {
+static bool isBufferIncreasing(const utilities::AudioBuffer<T> &buffer) {
+    for (uint32_t channel = 0; channel < buffer.getNumberOfChannels(); ++channel) {
         T prevSample = std::numeric_limits<T>::min();
-        for (int sample = 0; sample < buffer.getFramesPerBuffer() ; ++sample) {
+        for (int sample = 0; sample < buffer.getFramesPerBuffer(); ++sample) {
             auto currentSample = buffer[sample * buffer.getNumberOfChannels() + channel];
-            if(currentSample <= prevSample){
+            if (currentSample <= prevSample) {
                 std::cout << currentSample << ", " << prevSample;
                 return false;
             }
@@ -50,28 +51,21 @@ static bool isBufferIncreasing(const utilities::AudioBuffer<T>& buffer){
     }
     return true;
 }
-
-template<typename T>
-utilities::AudioBuffer<T> getAudioBuffer(double sampleRate, double lengthInSecs)
-{
-    auto lengthInSamples = static_cast<uint64_t>(sampleRate * lengthInSecs);
-
-}
-
-
 class ADSRTest : public Test {
 public:
-    ADSRTest()
-    {
-        _parameters.attackTimeSec = 1.0;
-        _parameters.decayTimeSec = 1.0;
-        _parameters.releaseTimeSec = 1.0;
+    using Duration_ms = std::chrono::duration<double, std::milli>;
+
+    ADSRTest() {
+        _parameters.attackTime = 100.0ms;
+        _parameters.decayTime = 30.0ms;
+        _parameters.releaseTime = 400.0ms;
         _parameters.sustainLevel = 0.6;
         _adsrEnv.configure(_parameters);
-        _adsrEnv.setSampleRate(_samplingFreq);
+        _adsrEnv.setSampleRate(static_cast<double>(_samplingFreq_hz));
     }
 
-    static double advanceEnv(AdsrEnv& env, uint64_t numTicks){
+    double advanceEnv(AdsrEnv &env, const std::chrono::duration<double> &duration) {
+        auto numTicks = static_cast<uint64_t>(duration.count() * _samplingFreq_hz);
         double val = 0.0;
         for (uint64_t i = 0U; i < numTicks; ++i) {
             val = env.tick();
@@ -81,7 +75,7 @@ public:
 
 protected:
     AdsrEnv _adsrEnv;
-    double _samplingFreq = 100.0;
+    double _samplingFreq_hz = 100.0;
     AdsrEnv::Parameters _parameters;
 };
 
@@ -90,13 +84,11 @@ TEST_F(ADSRTest, initialNoActive) {
     for (int times = 0; times < 100; ++times) {
         EXPECT_FLOAT_EQ(_adsrEnv.tick(), 0.0f);
     }
+    EXPECT_TRUE(!_adsrEnv.isActive());
 }
 
-TEST_F(ADSRTest, completeAnEnvelope){
+TEST_F(ADSRTest, completeAnEnvelope) {
     // GIVEN
-    auto ticksAttack = static_cast<uint64_t>(_parameters.attackTimeSec * _samplingFreq);
-    auto ticksDecay = static_cast<uint64_t>(_parameters.decayTimeSec * _samplingFreq);
-    auto ticksRelease = static_cast<uint64_t>(_parameters.releaseTimeSec * _samplingFreq);
     double val = 0.0;
     double minimumLevel = 0.0001;
     //// TRIGGER
@@ -106,34 +98,34 @@ TEST_F(ADSRTest, completeAnEnvelope){
     ASSERT_TRUE(_adsrEnv.isActive());
     //// ATTACK
     //WHEN
-    val = advanceEnv(_adsrEnv,ticksAttack);
+    val = advanceEnv(_adsrEnv, _parameters.attackTime);
     // THEN
-    EXPECT_FLOAT_EQ(val,1.0);
+    EXPECT_FLOAT_EQ(val, 1.0);
     //// SUSTAIN
     // WHEN
-    val = advanceEnv(_adsrEnv,ticksDecay);
+    val = advanceEnv(_adsrEnv, _parameters.decayTime);
     // THEN
     EXPECT_FLOAT_EQ(val, _parameters.sustainLevel);
     //// SUSTAIN
-    val = advanceEnv(_adsrEnv,1000U);
+    val = advanceEnv(_adsrEnv, 1000.0ms);
     EXPECT_FLOAT_EQ(val, _parameters.sustainLevel);
     //// RELEASE
     // WHEN
     _adsrEnv.release();
-    val = advanceEnv(_adsrEnv,ticksRelease);
+    val = advanceEnv(_adsrEnv, _parameters.releaseTime);
     // THEN
     //// IDLE
     EXPECT_TRUE(!_adsrEnv.isActive());
 }
 
 
-TEST_F(ADSRTest, Attack){
+TEST_F(ADSRTest, Attack) {
     // GIVEN
-    auto ticksAttack = static_cast<int64_t>(_parameters.attackTimeSec * _samplingFreq);
+    auto ticksAttack = static_cast<uint64_t>(AdsrEnv::SecondsDur(_parameters.attackTime).count() * _samplingFreq_hz);
     const uint32_t nChannels = 2U;
-    std::vector<float> buffer(ticksAttack*nChannels);
-    std::fill(buffer.begin(), buffer.end(),1.0);
-    utilities::AudioBuffer<float> bufferToFill(buffer.data(),nChannels,ticksAttack);
+    std::vector<float> buffer(ticksAttack * nChannels);
+    std::fill(buffer.begin(), buffer.end(), 1.0);
+    utilities::AudioBuffer<float> bufferToFill(buffer.data(), nChannels, ticksAttack);
     // WHEN
     _adsrEnv.trigger();
     // THEN
@@ -142,63 +134,62 @@ TEST_F(ADSRTest, Attack){
     _adsrEnv.process(bufferToFill);
     // THEN
     ASSERT_TRUE(isBufferIncreasing(bufferToFill));
-    EXPECT_FLOAT_EQ(buffer[buffer.size()-1],1.0);    
+    EXPECT_FLOAT_EQ(buffer[buffer.size() - 1], 1.0);
 }
 
-TEST_F(ADSRTest, Decay){
+TEST_F(ADSRTest, Decay) {
     // GIVEN
-    auto tickDecay = static_cast<int64_t>(_parameters.decayTimeSec * _samplingFreq);
+    auto tickDecay = static_cast<int64_t>(AdsrEnv::SecondsDur(_parameters.decayTime).count() * _samplingFreq_hz);
     const uint32_t nChannels = 2U;
-    std::vector<float> buffer(tickDecay*nChannels);
-    std::fill(buffer.begin(), buffer.end(),1.0);
-    utilities::AudioBuffer<float> bufferToFill(buffer.data(),nChannels,tickDecay);
+    std::vector<float> buffer(tickDecay * nChannels);
+    std::fill(buffer.begin(), buffer.end(), 1.0);
+    utilities::AudioBuffer<float> bufferToFill(buffer.data(), nChannels, tickDecay);
 
     // WHEN
     _adsrEnv.trigger();
-    advanceEnv(_adsrEnv,static_cast<int64_t>(_parameters.attackTimeSec * _samplingFreq));
+    advanceEnv(_adsrEnv, _parameters.attackTime);
     // WHEN
     _adsrEnv.process(bufferToFill);
     // THEN
     ASSERT_TRUE(isBufferDecreasing(bufferToFill));
-    EXPECT_FLOAT_EQ(buffer[buffer.size()-1],_parameters.sustainLevel);    
-    
+    EXPECT_FLOAT_EQ(buffer[buffer.size() - 1], _parameters.sustainLevel);
+
 }
 
-TEST_F(ADSRTest, Sustain){
+TEST_F(ADSRTest, Sustain) {
     // GIVEN
-    auto numberOfticks = static_cast<int64_t>(2.0 * _samplingFreq);
+    auto numberOfticks = static_cast<uint64_t>(2.0 * _samplingFreq_hz);
     const uint32_t nChannels = 2U;
-    std::vector<float> buffer(numberOfticks*nChannels);
-    std::vector<float> expectedBuffer(numberOfticks*nChannels);
-    std::fill(buffer.begin(), buffer.end(),1.0);
+    std::vector<float> buffer(numberOfticks * nChannels);
+    std::vector<float> expectedBuffer(numberOfticks * nChannels);
+    std::fill(buffer.begin(), buffer.end(), 1.0);
     std::fill(expectedBuffer.begin(), expectedBuffer.end(), _parameters.sustainLevel);
-    utilities::AudioBuffer<float> bufferToFill(buffer.data(),nChannels,numberOfticks);
+    utilities::AudioBuffer<float> bufferToFill(buffer.data(), nChannels, numberOfticks);
 
     // WHEN
     _adsrEnv.trigger();
-    advanceEnv(_adsrEnv,static_cast<int64_t>((_parameters.attackTimeSec + _parameters.decayTimeSec) * _samplingFreq));
+    advanceEnv(_adsrEnv, _parameters.attackTime + _parameters.decayTime);
     // WHEN
     _adsrEnv.process(bufferToFill);
     // THEN
-    EXPECT_EQ(buffer,expectedBuffer);
+    EXPECT_EQ(buffer, expectedBuffer);
 }
 
 
-
-TEST_F(ADSRTest, Release){
+TEST_F(ADSRTest, Release) {
     // GIVEN
-    auto ticksRelease = static_cast<int64_t>(_parameters.releaseTimeSec * _samplingFreq);
+    auto ticksRelease = static_cast<uint64_t>(AdsrEnv::SecondsDur(_parameters.releaseTime).count() * _samplingFreq_hz);
     const uint32_t nChannels = 2U;
-    std::vector<float> buffer(ticksRelease*nChannels);
-    std::fill(buffer.begin(), buffer.end(),1.0);
-    utilities::AudioBuffer<float> bufferToFill(buffer.data(),nChannels,ticksRelease);
+    std::vector<float> buffer(ticksRelease * nChannels);
+    std::fill(buffer.begin(), buffer.end(), 1.0);
+    utilities::AudioBuffer<float> bufferToFill(buffer.data(), nChannels, ticksRelease);
     double minimumLevel = 0.0001;
 
     // WHEN
     _adsrEnv.trigger();
-    advanceEnv(_adsrEnv,static_cast<int64_t>((_parameters.attackTimeSec + _parameters.decayTimeSec) * _samplingFreq));
-    auto val = advanceEnv(_adsrEnv,100U);
-    EXPECT_FLOAT_EQ(val,_parameters.sustainLevel);
+    advanceEnv(_adsrEnv, _parameters.attackTime + _parameters.decayTime);
+    auto val = advanceEnv(_adsrEnv, 100ms);
+    EXPECT_FLOAT_EQ(val, _parameters.sustainLevel);
     _adsrEnv.release();
 
     // WHEN
