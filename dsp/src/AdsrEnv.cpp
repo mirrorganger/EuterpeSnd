@@ -87,7 +87,8 @@ namespace dsp {
                                   [&](Release) {
                                       _envelopeValue *= _releaseSection.advanceMultiplier;
                                       _currentSectionSample++;
-                                      if (_currentSectionSample == _releaseSection.length) {
+                                      if (_currentSectionSample >= _releaseSection.length &&
+                                          _envelopeValue < _minimumLevel) {
                                           _currentSectionSample = 0U;
                                           //_envelopeValue = _minimumLevel;
                                           _stm.transition(TargetLevelReached{});

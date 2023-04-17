@@ -27,8 +27,7 @@ static bool isBufferDecreasing(const utilities::AudioBuffer<T> &buffer) {
         for (int sample = 0; sample < buffer.getFramesPerBuffer(); ++sample) {
             auto currentSample = buffer[sample * buffer.getNumberOfChannels() + channel];
             if (currentSample >= prevSample) {
-                std::cout << currentSample << ", " << prevSample;
-                return false;
+                EXPECT_NEAR(currentSample,prevSample,0.000001);
             }
             prevSample = currentSample;
         }
@@ -43,8 +42,7 @@ static bool isBufferIncreasing(const utilities::AudioBuffer<T> &buffer) {
         for (int sample = 0; sample < buffer.getFramesPerBuffer(); ++sample) {
             auto currentSample = buffer[sample * buffer.getNumberOfChannels() + channel];
             if (currentSample <= prevSample) {
-                std::cout << currentSample << ", " << prevSample;
-                return false;
+                EXPECT_NEAR(currentSample,prevSample,0.000001);
             }
             prevSample = currentSample;
         }
@@ -112,7 +110,7 @@ TEST_F(ADSRTest, completeAnEnvelope) {
     //// RELEASE
     // WHEN
     _adsrEnv.release();
-    val = advanceEnv(_adsrEnv, _parameters.releaseTime);
+    advanceEnv(_adsrEnv, _parameters.releaseTime);
     // THEN
     //// IDLE
     EXPECT_TRUE(!_adsrEnv.isActive());
@@ -196,8 +194,43 @@ TEST_F(ADSRTest, Release) {
     _adsrEnv.process(bufferToFill);
     // THEN
     ASSERT_TRUE(isBufferDecreasing(bufferToFill));
+    EXPECT_TRUE(_adsrEnv.isInState<Idle>());
 }
 
+TEST_F(ADSRTest, releaseWhenInAttack)
+{
+    _adsrEnv.trigger();
+    advanceEnv(_adsrEnv, _parameters.attackTime / 2);
+    _adsrEnv.release();
+    EXPECT_TRUE(_adsrEnv.isInState<Release>());
+    advanceEnv(_adsrEnv, _parameters.releaseTime);
+    EXPECT_TRUE(_adsrEnv.isInState<Idle>());
+    _adsrEnv.trigger();
+    advanceEnv(_adsrEnv,_parameters.attackTime / 2);
+    EXPECT_TRUE(_adsrEnv.isInState<Attack>());
+}
+
+
+TEST_F(ADSRTest, releaseWhenInDecay){
+    // GIVEN
+    double val = 0.0;
+    double minimumLevel = 0.0001;
+    uint32_t timeAfterRelease_ms = 3000;
+    const uint32_t nChannels = 2U;
+    std::vector<float> buffer(timeAfterRelease_ms * nChannels);
+    std::fill(buffer.begin(), buffer.end(), 1.0);
+    utilities::AudioBuffer<float> bufferToFill(buffer.data(), nChannels, timeAfterRelease_ms);
+
+    // WHEN
+    _adsrEnv.trigger();
+    advanceEnv(_adsrEnv, _parameters.attackTime + (_parameters.decayTime));
+    _adsrEnv.release();
+    _adsrEnv.process(bufferToFill);
+    // THEN
+    ASSERT_TRUE(isBufferDecreasing(bufferToFill));
+    EXPECT_TRUE(!_adsrEnv.isActive());
+    EXPECT_NEAR(_adsrEnv.tick(),minimumLevel,0.0001);
+}
 
 
 

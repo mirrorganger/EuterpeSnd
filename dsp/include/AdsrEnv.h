@@ -27,7 +27,7 @@ namespace dsp {
         }
 
     private:
-        static constexpr std::string_view _name = "attack";
+        static constexpr std::string_view _name = "decay";
     };
 
     struct Sustain {
@@ -127,6 +127,11 @@ namespace dsp {
 
         void setDecayTime(std::chrono::duration<double, std::milli> decayTimeSec);
 
+        template<typename StateType>
+        bool isInState() const{
+            return std::holds_alternative<StateType>(_stm.getState());
+        }
+
         bool isActive() const;
 
         void trigger();
@@ -154,7 +159,6 @@ namespace dsp {
         uint64_t _currentSectionSample = 0U;
         AdsrStm _stm;
     };
-
 }
 
 #endif

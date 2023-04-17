@@ -5,16 +5,21 @@
 #include <optional>
 #include <iostream>
 
-namespace utilities{
+namespace utilities {
 
 
-    template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+    template<class... Ts>
+    struct overloaded : Ts ... {
+        using Ts::operator()...;
+    };
 
-    template <typename Derived, typename StateType> class Fsm {
+
+    template<typename Derived, typename StateType>
+    class Fsm {
     public:
         const StateType &getState() const { return _currentState; }
 
-        template <typename Event>
+        template<typename Event>
         void transition(Event &&event) {
             Derived &_this = static_cast<Derived &>(*this);
             auto nextState = std::visit(
@@ -29,10 +34,14 @@ namespace utilities{
                     },
                     _currentState);
 
-            if (nextState){
-                //std::cout << std::visit(printName(),_currentState) << "->";
+            if (nextState) {
+
+                auto printStateName = [](auto &state) -> std::string_view {
+                    return state.getName();
+                };
+                std::cout << std::visit(printStateName, _currentState) << "->";
                 _currentState = *std::move(nextState);
-                //std::cout << std::visit(printName(),_currentState) << std::endl;
+                std::cout << std::visit(printStateName, _currentState) << std::endl;
             }
         }
 
