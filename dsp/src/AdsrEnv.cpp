@@ -44,12 +44,13 @@ namespace dsp {
     }
 
     void AdsrEnv::trigger() {
-        _envelopeValue = _minimumLevel;
+        if(_envelopeValue < MINIMUM_LEVEL) _envelopeValue = MINIMUM_LEVEL;
         _currentSectionSample = 0U;
         _stm.transition(NoteOnEvt());
     }
 
     void AdsrEnv::release() {
+        // TODO : Update release rate with current envelope value
         _currentSectionSample = 0U;
         _stm.transition(NoteOffEvt{});
     }
@@ -61,6 +62,9 @@ namespace dsp {
 /**
  * TODO: Think about when to set it to the target values in each step.
  * A_db = 20 log_10 (A_liner)
+ *
+ * The time of attack left (in samples) could be computed from the current value
+ * and the multiplier.
  * @return
  */
     float AdsrEnv::tick() {
@@ -68,7 +72,8 @@ namespace dsp {
                                   [&](Attack) {
                                       _envelopeValue *= _attackSection.advanceMultiplier;
                                       _currentSectionSample++;
-                                      if (_currentSectionSample == _attackSection.length) {
+                                      //if (_currentSectionSample == _attackSection.length) {
+                                      if (_envelopeValue >= (1.0 - 0.01)) {
                                           _envelopeValue = 1.0;
                                           _currentSectionSample = 0U;
                                           _stm.transition(TargetLevelReached{});
@@ -77,7 +82,9 @@ namespace dsp {
                                   [&](Decay) {
                                       _envelopeValue *= _decaySection.advanceMultiplier;
                                       _currentSectionSample++;
-                                      if (_currentSectionSample == _decaySection.length) {
+                                      if(_envelopeValue <= (_parameters.sustainLevel + 0.01))
+                                      //if (_currentSectionSample == _decaySection.length)
+                                      {
                                           _envelopeValue = _parameters.sustainLevel;
                                           _currentSectionSample = 0U;
                                           _stm.transition(TargetLevelReached{});
@@ -87,8 +94,8 @@ namespace dsp {
                                   [&](Release) {
                                       _envelopeValue *= _releaseSection.advanceMultiplier;
                                       _currentSectionSample++;
-                                      if (_currentSectionSample >= _releaseSection.length &&
-                                          _envelopeValue < _minimumLevel) {
+                                      //if (_currentSectionSample >= _releaseSection.length &&
+                                      if(_envelopeValue <= _minimumLevel + 0.01) {
                                           _currentSectionSample = 0U;
                                           //_envelopeValue = _minimumLevel;
                                           _stm.transition(TargetLevelReached{});

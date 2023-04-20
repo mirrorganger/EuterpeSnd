@@ -39,9 +39,9 @@ namespace utilities {
                 auto printStateName = [](auto &state) -> std::string_view {
                     return state.getName();
                 };
-                std::cout << std::visit(printStateName, _currentState) << "->";
+                //std::cout << std::visit(printStateName, _currentState) << "->";
                 _currentState = *std::move(nextState);
-                std::cout << std::visit(printStateName, _currentState) << std::endl;
+                //std::cout << std::visit(printStateName, _currentState) << std::endl;
             }
         }
 

@@ -2,12 +2,16 @@
 #define EUTERPESND_DSP_ADSRENV_H
 
 #include "Fsm.h"
+#include "Conversions.h"
 #include "AudioBufferTools.h"
 #include "AudioBuffer.h"
 #include <string>
 #include <iostream>
 #include <chrono>
 using namespace std::chrono_literals;
+
+constexpr double MINIMUM_LEVEL_DB = -80.0;
+const double MINIMUM_LEVEL = utilities::fromDecibelsToGain(MINIMUM_LEVEL_DB);
 
 namespace dsp {
 
@@ -81,9 +85,11 @@ namespace dsp {
             return std::nullopt;
         }
 
-        // Idle state
-        auto processEvent(Idle &, const NoteOnEvt &e) { 
-            return Attack(); }
+        template<typename CurrentState>
+        auto processEvent(CurrentState &, const NoteOnEvt &e) {
+            return Attack();
+        }
+
 
         // Attack state
         auto processEvent(Attack &, const TargetLevelReached &e) {
@@ -96,6 +102,9 @@ namespace dsp {
         auto processEvent(Decay &, const TargetLevelReached &e) {
              return Sustain(); }
 
+        auto processEvent(Decay &, const NoteOffEvt &e) {
+            return Release(); }
+
         // Sustain
         auto processEvent(Sustain &, const NoteOffEvt &e) {
              return Release(); }
@@ -103,6 +112,8 @@ namespace dsp {
         // Release
         auto processEvent(Release &, const TargetLevelReached &e) {
              return Idle(); }
+
+
     };
 
     class AdsrEnv : public utilities::AudioProcessor<float> {
@@ -153,9 +164,9 @@ namespace dsp {
         ExpSection<double> _attackSection;
         ExpSection<double> _decaySection;
         ExpSection<double> _releaseSection;
-        double _envelopeValue = 0.0;
-        double _sampleRate = 0.0;
         double _minimumLevel = 0.0001;
+        double _envelopeValue = 0.0;
+        double _sampleRate = MINIMUM_LEVEL;
         uint64_t _currentSectionSample = 0U;
         AdsrStm _stm;
     };

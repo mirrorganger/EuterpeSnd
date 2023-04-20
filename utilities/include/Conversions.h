@@ -29,6 +29,11 @@ namespace utilities{
         return (gain > (DataType) 0) ? std::max(std::log10(gain) * static_cast<DataType>(20),minimumLevelDb) : minimumLevelDb; 
     }
 
+    template<typename DataType>
+    inline DataType fromDecibelsToGain(DataType decibels, DataType minimumLevelDb = (DataType)-100){
+        return (decibels > minimumLevelDb) ? std::pow(DataType(10.0), decibels / DataType(20.0)) : DataType(0);
+    }
+
 }
 
 
