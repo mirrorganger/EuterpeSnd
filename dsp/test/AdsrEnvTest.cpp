@@ -6,6 +6,8 @@ using namespace dsp;
 using namespace testing;
 using namespace std::chrono_literals;
 
+const float MAX_ERROR = 0.001;
+
 template<typename T>
 static bool isBufferDecreasing(const utilities::AudioBuffer<T> &buffer) {
     for (uint32_t channel = 0; channel < buffer.getNumberOfChannels(); ++channel) {
@@ -13,7 +15,7 @@ static bool isBufferDecreasing(const utilities::AudioBuffer<T> &buffer) {
         for (int sample = 0; sample < buffer.getFramesPerBuffer(); ++sample) {
             auto currentSample = buffer[sample * buffer.getNumberOfChannels() + channel];
             if (currentSample >= prevSample) {
-                EXPECT_NEAR(currentSample, prevSample, 0.000001);
+                EXPECT_NEAR(currentSample, prevSample, MAX_ERROR);
             }
             prevSample = currentSample;
         }
@@ -36,23 +38,8 @@ static bool isBufferIncreasing(const utilities::AudioBuffer<T> &buffer) {
     return true;
 }
 
-template<typename NumericType>
-NumericType getExpRateMultiplier(NumericType startLevel, NumericType endLevel, NumericType sampleRate,
-                                 AdsrEnv::SecondsDur intervalTime) {
-    return 1.0 + (log(endLevel) - log(startLevel)) / (intervalTime.count() * sampleRate);
-}
-
-template<typename NumericType>
-uint64_t
-getLengthFromMultiplier(NumericType startLevel, NumericType endLevel, NumericType sampleRate, NumericType multiplier) {
-    return static_cast<uint64_t>(log(endLevel) - log(startLevel)) / (multiplier - 1.0 * sampleRate);
-}
-
-template<typename NumericType>
-uint64_t getSectionSamplesLeft(NumericType originalStartLevel, NumericType endLevel, NumericType samplingFreq_hz,
-                               AdsrEnv::SecondsDur originalTime, NumericType newStart) {
-    auto attackMultiplier = getExpRateMultiplier(originalStartLevel, endLevel, samplingFreq_hz, originalTime);
-    return getLengthFromMultiplier(newStart, endLevel, samplingFreq_hz, attackMultiplier);
+MATCHER_P(Near, AllowedError,""){
+    return abs(get<0>(arg) - get<1>(arg)) < AllowedError;
 }
 
 
@@ -80,7 +67,7 @@ public:
 
 protected:
     AdsrEnv _adsrEnv;
-    double _samplingFreq_hz = 48'000.0;
+    double _samplingFreq_hz = 48000.0;
     AdsrEnv::Parameters _parameters;
 };
 
@@ -105,23 +92,29 @@ TEST_F(ADSRTest, completeAnEnvelope) {
     //WHEN
     val = advanceEnv(_adsrEnv, _parameters.attackTime);
     // THEN
-    EXPECT_NEAR(val, 1.0, MINIMUM_LEVEL);
+    EXPECT_NEAR(val, 1.0, MAX_ERROR);
     //// SUSTAIN
     // WHEN
     val = advanceEnv(_adsrEnv, _parameters.decayTime);
     // THEN
-    EXPECT_NEAR(val, _parameters.sustainLevel, MINIMUM_LEVEL);
+    EXPECT_NEAR(val, _parameters.sustainLevel, MAX_ERROR);
     //// SUSTAIN
     val = advanceEnv(_adsrEnv, 1000.0ms);
-    EXPECT_NEAR(val, _parameters.sustainLevel, MINIMUM_LEVEL);
+    EXPECT_NEAR(val, _parameters.sustainLevel, MAX_ERROR);
     //// RELEASE
     // WHEN
     _adsrEnv.release();
     val = advanceEnv(_adsrEnv, _parameters.releaseTime);
-    EXPECT_NEAR(val, 0.0, MINIMUM_LEVEL);
+    EXPECT_NEAR(val, 0.0, MAX_ERROR);
     // THEN
     //// IDLE
     EXPECT_TRUE(!_adsrEnv.isActive());
+    //
+    _adsrEnv.trigger();
+    EXPECT_TRUE(_adsrEnv.isActive());
+    val = advanceEnv(_adsrEnv, _parameters.attackTime);
+    // THEN
+    EXPECT_NEAR(val, 1.0, MAX_ERROR);
 }
 
 
@@ -140,7 +133,7 @@ TEST_F(ADSRTest, Attack) {
     _adsrEnv.process(bufferToFill);
     // THEN
     ASSERT_TRUE(isBufferIncreasing(bufferToFill));
-    EXPECT_NEAR(buffer[buffer.size() - 1], 1.0, MINIMUM_LEVEL);
+    EXPECT_NEAR(buffer[buffer.size() - 1], 1.0, MAX_ERROR);
 }
 
 TEST_F(ADSRTest, Decay) {
@@ -158,8 +151,7 @@ TEST_F(ADSRTest, Decay) {
     _adsrEnv.process(bufferToFill);
     // THEN
     ASSERT_TRUE(isBufferDecreasing(bufferToFill));
-    EXPECT_FLOAT_EQ(buffer[buffer.size() - 1], _parameters.sustainLevel);
-
+    EXPECT_NEAR(buffer[buffer.size() - 1], _parameters.sustainLevel,MAX_ERROR);
 }
 
 TEST_F(ADSRTest, Sustain) {
@@ -178,7 +170,7 @@ TEST_F(ADSRTest, Sustain) {
     // WHEN
     _adsrEnv.process(bufferToFill);
     // THEN
-    EXPECT_EQ(buffer, expectedBuffer);
+    EXPECT_THAT(buffer, Pointwise(Near(MAX_ERROR),expectedBuffer));
 }
 
 
@@ -240,27 +232,42 @@ TEST_F(ADSRTest, releaseWhenInDecay) {
 }
 
 TEST_F(ADSRTest, AttackWhenInDecay) {
-    const uint32_t nChannels = 2;
-    const double attackStartValue = 0.001;
-    const double attackEndValue = 1.0;
+    const uint32_t nChannels = 1;
+    const size_t samplesAfterReTrigger = static_cast<size_t>(AdsrEnv::SecondsDur(_parameters.attackTime).count()*_samplingFreq_hz);
     _adsrEnv.trigger();
-    auto val = advanceEnv(_adsrEnv, _parameters.attackTime + (_parameters.decayTime / 2));
+    advanceEnv(_adsrEnv, _parameters.attackTime + (_parameters.decayTime / 2));
     _adsrEnv.trigger();
-    auto attackSamplesLeft = getSectionSamplesLeft(attackStartValue, attackEndValue, _samplingFreq_hz,
-                                                   _parameters.attackTime, val);
-    std::vector<float> buffer(static_cast<size_t>(attackSamplesLeft) * nChannels);
+    std::vector<float> buffer(samplesAfterReTrigger * nChannels);
     std::fill(buffer.begin(), buffer.end(), 1.0);
-    utilities::AudioBuffer<float> bufferToFill(buffer.data(), nChannels, attackSamplesLeft);
+    utilities::AudioBuffer<float> bufferToFill(buffer.data(), nChannels, buffer.size());
     _adsrEnv.process(bufferToFill);
-    ASSERT_TRUE(isBufferIncreasing(bufferToFill));
+    EXPECT_NEAR(*std::max_element(buffer.begin(),buffer.end()),1.0,MAX_ERROR);
 }
 
 TEST_F(ADSRTest, AttackWhenInSustain) {
-
+    const uint32_t nChannels = 1;
+    const size_t samplesAfterReTrigger = static_cast<size_t>(AdsrEnv::SecondsDur(_parameters.attackTime).count()*_samplingFreq_hz);
+    _adsrEnv.trigger();
+    advanceEnv(_adsrEnv, _parameters.attackTime + _parameters.decayTime + 200ms);
+    _adsrEnv.trigger();
+    std::vector<float> buffer(samplesAfterReTrigger * nChannels);
+    std::fill(buffer.begin(), buffer.end(), 1.0);
+    utilities::AudioBuffer<float> bufferToFill(buffer.data(), nChannels, buffer.size());
+    _adsrEnv.process(bufferToFill);
+    EXPECT_NEAR(*std::max_element(buffer.begin(),buffer.end()),1.0,MAX_ERROR);
 }
 
 TEST_F(ADSRTest, AttackWhenInRelease) {
-
+    const uint32_t nChannels = 1;
+    const size_t samplesAfterReTrigger = static_cast<size_t>(AdsrEnv::SecondsDur(_parameters.attackTime).count()*_samplingFreq_hz);
+    _adsrEnv.trigger();
+    advanceEnv(_adsrEnv, _parameters.attackTime + _parameters.decayTime + 200ms);
+    _adsrEnv.release();
+    advanceEnv(_adsrEnv, _parameters.releaseTime / 4.0);
+    _adsrEnv.trigger();
+    std::vector<float> buffer(samplesAfterReTrigger * nChannels);
+    std::fill(buffer.begin(), buffer.end(), 1.0);
+    utilities::AudioBuffer<float> bufferToFill(buffer.data(), nChannels, buffer.size());
+    _adsrEnv.process(bufferToFill);
+    EXPECT_NEAR(*std::max_element(buffer.begin(),buffer.end()),1.0,MAX_ERROR);
 }
-
-

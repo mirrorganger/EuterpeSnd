@@ -16,6 +16,9 @@ namespace dsp {
 
     void AdsrEnv::configure(const AdsrEnv::Parameters &param) {
         _parameters = param;
+        _attackSection.overShoot = utilities::fromDecibelsToGain(ATTACK_OVERSHOOT_DB);
+        _releaseSection.overShoot = utilities::fromDecibelsToGain(DECAY_RELEASE_OVERSHOOT_DB);
+        _decaySection.overShoot = utilities::fromDecibelsToGain(DECAY_RELEASE_OVERSHOOT_DB);
         updateRates();
     }
 
@@ -44,7 +47,7 @@ namespace dsp {
     }
 
     void AdsrEnv::trigger() {
-        if(_envelopeValue < MINIMUM_LEVEL) _envelopeValue = MINIMUM_LEVEL;
+        if (_envelopeValue < MINIMUM_LEVEL) _envelopeValue = MINIMUM_LEVEL;
         _currentSectionSample = 0U;
         _stm.transition(NoteOnEvt());
     }
@@ -70,34 +73,30 @@ namespace dsp {
     float AdsrEnv::tick() {
         auto visitor = Overloaded{[&](Idle) { _envelopeValue = 0.0f; },
                                   [&](Attack) {
-                                      _envelopeValue *= _attackSection.advanceMultiplier;
+                                      _envelopeValue = _attackSection.baseValue +
+                                              _attackSection.advanceMultiplier * _envelopeValue;
                                       _currentSectionSample++;
-                                      //if (_currentSectionSample == _attackSection.length) {
-                                      if (_envelopeValue >= (1.0 - 0.01)) {
+                                      if (_envelopeValue >= (1.0)) {
                                           _envelopeValue = 1.0;
-                                          _currentSectionSample = 0U;
                                           _stm.transition(TargetLevelReached{});
                                       }
                                   },
                                   [&](Decay) {
-                                      _envelopeValue *= _decaySection.advanceMultiplier;
+                                      _envelopeValue = _decaySection.baseValue +
+                                                        _decaySection.advanceMultiplier * _envelopeValue;
                                       _currentSectionSample++;
-                                      if(_envelopeValue <= (_parameters.sustainLevel + 0.01))
-                                      //if (_currentSectionSample == _decaySection.length)
+                                      if (_envelopeValue <= (_parameters.sustainLevel))
                                       {
                                           _envelopeValue = _parameters.sustainLevel;
-                                          _currentSectionSample = 0U;
                                           _stm.transition(TargetLevelReached{});
                                       }
                                   },
                                   [&](Sustain) {},
                                   [&](Release) {
-                                      _envelopeValue *= _releaseSection.advanceMultiplier;
+                                      _envelopeValue = _releaseSection.baseValue +
+                                                        _releaseSection.advanceMultiplier * _envelopeValue;
                                       _currentSectionSample++;
-                                      //if (_currentSectionSample >= _releaseSection.length &&
-                                      if(_envelopeValue <= _minimumLevel + 0.01) {
-                                          _currentSectionSample = 0U;
-                                          //_envelopeValue = _minimumLevel;
+                                      if (_envelopeValue <= _minimumLevel) {
                                           _stm.transition(TargetLevelReached{});
                                       }
                                   }};
@@ -134,17 +133,27 @@ namespace dsp {
 
     void AdsrEnv::updateRates() {
         _attackSection.length = static_cast<uint64_t>(SecondsDur(_parameters.attackTime).count() * _sampleRate);
-        _attackSection.advanceMultiplier = getRateMult(_minimumLevel, 1.0, _parameters.attackTime);
+        _attackSection.advanceMultiplier = getRateMult(_attackSection.overShoot, 1.0 + _attackSection.overShoot,
+                                                       _parameters.attackTime);
+        _attackSection.baseValue = (1.0 + _attackSection.overShoot) * (1.0 - _attackSection.advanceMultiplier);
         _decaySection.length = static_cast<uint64_t>(SecondsDur(_parameters.decayTime).count() * _sampleRate);
-        _decaySection.advanceMultiplier = getRateMult(1.0, _parameters.sustainLevel, _parameters.decayTime);
+        _decaySection.advanceMultiplier = getRateMult(_decaySection.overShoot, 1.0 + _decaySection.overShoot,
+                                                      _parameters.decayTime);
+        _decaySection.baseValue = (_parameters.sustainLevel-_decaySection.overShoot) * (1.0 - _decaySection.advanceMultiplier);
         _releaseSection.length = static_cast<uint64_t>(SecondsDur(_parameters.releaseTime).count() * _sampleRate);
-        _releaseSection.advanceMultiplier = getRateMult(_parameters.sustainLevel, _minimumLevel,
-                                                        _parameters.releaseTime);
+        _releaseSection.advanceMultiplier = getRateMult(_releaseSection.overShoot, 1.0 + _releaseSection.overShoot,
+                                                      _parameters.releaseTime);
+        _releaseSection.baseValue = (-_releaseSection.overShoot) * (1.0 - _releaseSection.advanceMultiplier);
     }
 
+    /*
     double AdsrEnv::getRateMult(double startLevel, double endLevel, SecondsDur intervalTime) {
         return 1.0 + (log(endLevel) - log(startLevel)) / (intervalTime.count() * _sampleRate);
     }
+    */
 
+    double AdsrEnv::getRateMult(double startLevel, double endLevel, dsp::AdsrEnv::SecondsDur intervalTime) {
+        return exp(-log(endLevel / startLevel) / (intervalTime.count() * _sampleRate));
+    }
 
 }

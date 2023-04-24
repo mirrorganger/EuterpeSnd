@@ -75,12 +75,12 @@ namespace utilities {
     }
 
     template<typename DataType>
-    DataType getChannelMag(const AudioBuffer<DataType>& buffer, uint32_t startSample, uint32_t numSamples, uint32_t channel){
+    DataType
+    getChannelMag(const AudioBuffer<DataType> &buffer, uint32_t startSample, uint32_t numSamples, uint32_t channel) {
         auto readPtr = buffer.getReadPointer();
         auto channelMag = std::numeric_limits<DataType>::min();
-        for (uint32_t i = startSample; i < startSample+numSamples; i++)
-        {
-            channelMag = std::max(readPtr[i*buffer.getNumberOfChannels()+channel],channelMag);
+        for (uint32_t i = startSample; i < startSample + numSamples; i++) {
+            channelMag = std::max(readPtr[i * buffer.getNumberOfChannels() + channel], channelMag);
         }
         return channelMag;
     }

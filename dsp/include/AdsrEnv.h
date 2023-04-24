@@ -12,6 +12,10 @@ using namespace std::chrono_literals;
 
 constexpr double MINIMUM_LEVEL_DB = -80.0;
 const double MINIMUM_LEVEL = utilities::fromDecibelsToGain(MINIMUM_LEVEL_DB);
+const double ATTACK_TARGET_VALUE = 1.0;
+const double ATTACK_OVERSHOOT_DB = -10.45; // 0.3 in gain.
+const double DECAY_RELEASE_OVERSHOOT_DB = -60.0; // 0.001 in gain.
+
 
 namespace dsp {
 
@@ -75,6 +79,8 @@ namespace dsp {
     template<typename T>
     struct ExpSection {
         T advanceMultiplier;
+        T baseValue;
+        T overShoot;
         uint64_t length = 0U;
     };
 
@@ -89,7 +95,6 @@ namespace dsp {
         auto processEvent(CurrentState &, const NoteOnEvt &e) {
             return Attack();
         }
-
 
         // Attack state
         auto processEvent(Attack &, const TargetLevelReached &e) {
@@ -119,6 +124,7 @@ namespace dsp {
     class AdsrEnv : public utilities::AudioProcessor<float> {
     public:
         using SecondsDur = std::chrono::duration<double>;
+        using Dur_ms = std::chrono::duration<double, std::milli>;
         struct Parameters {
             std::chrono::duration<double,std::milli>  attackTime = 200ms;
             std::chrono::duration<double,std::milli>  decayTime  = 200ms;
@@ -166,7 +172,7 @@ namespace dsp {
         ExpSection<double> _releaseSection;
         double _minimumLevel = 0.0001;
         double _envelopeValue = 0.0;
-        double _sampleRate = MINIMUM_LEVEL;
+        double _sampleRate;
         uint64_t _currentSectionSample = 0U;
         AdsrStm _stm;
     };
