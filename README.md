@@ -1,3 +1,3 @@
 Toolbox library for audio programming.
 
-[![Unit Test](https://github.com/Cesar287/EuterpeSnd/actions/workflows/cmake.yml/badge.svg)](https://github.com/Cesar287/EuterpeSnd/actions/workflows/cmake.yml)
+[![Build and Test](https://github.com/Cesar287/EuterpeSnd/actions/workflows/build_and_test.yml/badge.svg)](https://github.com/Cesar287/EuterpeSnd/actions/workflows/build_and_test.yml)
