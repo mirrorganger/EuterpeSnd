@@ -82,7 +82,6 @@ TEST_F(ADSRTest, initialNoActive) {
 TEST_F(ADSRTest, completeAnEnvelope) {
     // GIVEN
     double val = 0.0;
-    double minimumLevel = 0.0001;
     //// TRIGGER
     // WHEN
     _adsrEnv.trigger();
@@ -109,7 +108,7 @@ TEST_F(ADSRTest, completeAnEnvelope) {
     // THEN
     //// IDLE
     EXPECT_TRUE(!_adsrEnv.isActive());
-    //
+    // Retrigger
     _adsrEnv.trigger();
     EXPECT_TRUE(_adsrEnv.isActive());
     val = advanceEnv(_adsrEnv, _parameters.attackTime);

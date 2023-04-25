@@ -8,6 +8,7 @@
 #include <string>
 #include <iostream>
 #include <chrono>
+
 using namespace std::chrono_literals;
 
 constexpr double MINIMUM_LEVEL_DB = -80.0;
@@ -81,7 +82,6 @@ namespace dsp {
         T advanceMultiplier;
         T baseValue;
         T overShoot;
-        uint64_t length = 0U;
     };
 
     class AdsrStm : public utilities::Fsm<AdsrStm, State> {
@@ -98,25 +98,31 @@ namespace dsp {
 
         // Attack state
         auto processEvent(Attack &, const TargetLevelReached &e) {
-             return Decay(); }
+            return Decay();
+        }
 
-        auto processEvent(Attack &, const NoteOffEvt &e) { 
-            return Release(); }
+        auto processEvent(Attack &, const NoteOffEvt &e) {
+            return Release();
+        }
 
         // Decay
         auto processEvent(Decay &, const TargetLevelReached &e) {
-             return Sustain(); }
+            return Sustain();
+        }
 
         auto processEvent(Decay &, const NoteOffEvt &e) {
-            return Release(); }
+            return Release();
+        }
 
         // Sustain
         auto processEvent(Sustain &, const NoteOffEvt &e) {
-             return Release(); }
+            return Release();
+        }
 
         // Release
         auto processEvent(Release &, const TargetLevelReached &e) {
-             return Idle(); }
+            return Idle();
+        }
 
 
     };
@@ -126,10 +132,10 @@ namespace dsp {
         using SecondsDur = std::chrono::duration<double>;
         using Dur_ms = std::chrono::duration<double, std::milli>;
         struct Parameters {
-            std::chrono::duration<double,std::milli>  attackTime = 200ms;
-            std::chrono::duration<double,std::milli>  decayTime  = 200ms;
-            double  sustainLevel = 1.0f;
-            std::chrono::duration<double,std::milli>  releaseTime = 200ms;
+            std::chrono::duration<double, std::milli> attackTime = 200ms;
+            std::chrono::duration<double, std::milli> decayTime = 200ms;
+            double sustainLevel = 1.0f;
+            std::chrono::duration<double, std::milli> releaseTime = 200ms;
         };
 
         AdsrEnv() = default;
@@ -145,7 +151,7 @@ namespace dsp {
         void setDecayTime(std::chrono::duration<double, std::milli> decayTimeSec);
 
         template<typename StateType>
-        bool isInState() const{
+        bool isInState() const {
             return std::holds_alternative<StateType>(_stm.getState());
         }
 
@@ -170,10 +176,8 @@ namespace dsp {
         ExpSection<double> _attackSection;
         ExpSection<double> _decaySection;
         ExpSection<double> _releaseSection;
-        double _minimumLevel = 0.0001;
         double _envelopeValue = 0.0;
         double _sampleRate;
-        uint64_t _currentSectionSample = 0U;
         AdsrStm _stm;
     };
 }
