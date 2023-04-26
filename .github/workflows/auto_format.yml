@@ -1,4 +1,5 @@
-name: Auto Format
+name: Auto Formattter
+
 on:
   push:
     branches: [ "master" ]
@@ -19,14 +20,17 @@ jobs:
           sudo apt update
           sudo apt -y install clang-format-14
           clang-format-14 --version
-      - name : Chekcout code
+
+      - name : Checkout code
         uses : actions/checkout@v2
+
       - name : Run Formatting
         shell : bash
         run : find apps audioDevice dsp synthtools utilities -iname *.h -o -iname *.hpp -o -iname *.cpp | xargs clang-format-14 -style=file -verbose -i
+
       - name : Commit & push changes
         uses : actions-js/push@master
         with :
           message: "Auto formatting applied"
-          branch : ${{ github.head_ref}}
+          branch : ${{ github.head_ref }}
           github_token : ${{ secrets.GITHUB_TOKEN }}
