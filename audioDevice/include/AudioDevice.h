@@ -4,33 +4,29 @@
 #include "AudioBuffer.h"
 #include <memory>
 
-namespace audioDevice
-{
+namespace audioDevice {
 
-  struct DeviceParameters{
-    uint32_t sampleRateHz;
-    uint32_t nChannels;
-    uint32_t framesPerBuffer;
-  };
+struct DeviceParameters {
+  uint32_t sampleRateHz;
+  uint32_t nChannels;
+  uint32_t framesPerBuffer;
+};
 
-  template<typename DataType>  
-  class OutputDevice{
-    public:
-    virtual bool open()=0;
-    virtual void stop()=0;
-    virtual void setAudioProcessor(utilities::AudioProcessor<DataType>& processor) =0;
-    virtual ~OutputDevice() = default;
-  };
+template <typename DataType> class OutputDevice {
+public:
+  virtual bool open() = 0;
+  virtual void stop() = 0;
+  virtual void
+  setAudioProcessor(utilities::AudioProcessor<DataType> &processor) = 0;
+  virtual ~OutputDevice() = default;
+};
 
-  class AudioDeviceBuilder
-  {
-  public:
-    static std::unique_ptr<OutputDevice<float>> createOutputDevice(const DeviceParameters& params);
-  };
+class AudioDeviceBuilder {
+public:
+  static std::unique_ptr<OutputDevice<float>>
+  createOutputDevice(const DeviceParameters &params);
+};
 
-} 
-
-
-
+} // namespace audioDevice
 
 #endif

@@ -7,11 +7,8 @@
 using namespace audioDevice;
 using namespace testing;
 
-
-class AudioDeviceTest : public Test
-{
-
+class AudioDeviceTest : public Test {
 
 protected:
-    audioDevice::OutputDevice<float>* _outputDevice;
+  audioDevice::OutputDevice<float> *_outputDevice;
 };
