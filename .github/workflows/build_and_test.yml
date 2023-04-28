@@ -31,7 +31,7 @@ jobs:
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_APPS=ON
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_APPS=ON -DENABLE_COVERAGE=ON
 
     - name: Build
       # Build your program with the given configuration
@@ -41,7 +41,9 @@ jobs:
       run : GTEST_COLOR=1 ctest --test-dir ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --verbose
 
     - name : Create coverage report
-      run : gcovr -r ${{github.workspace}}/dsp/src/ ${{github.workspace}}/synthtools/src/ ${{github.workspace}}/utilities/src/ ${{github.workspace}}/build/ --coveralls=${{github.workspace}}/build/coverage/lcov.info
+      run : gcovr -r ${{github.workspace}}/dsp/src/ ${{github.workspace}}/synthtools/src/ ${{github.workspace}}/utilities/src/ ${{github.workspace}}/build/ --coveralls=${{github.workspace}}/build/lcov.info
 
     - name: Coveralls GitHub Action
       uses: coverallsapp/github-action@v1
+      with:
+        path-to-lcov: ${{github.workspace}}/build/lcov.info
