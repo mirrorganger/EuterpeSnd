@@ -21,6 +21,9 @@ jobs:
     - name : install alsa 
       run  : sudo apt-get install -y libasound2-dev
 
+    - name : install gcovr
+      run  : pip install gcovr
+
     - uses: actions/checkout@v3
       with:
         submodules: recursive
@@ -36,6 +39,9 @@ jobs:
 
     - name : Tests
       run : GTEST_COLOR=1 ctest --test-dir ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --verbose
+
+    - name : Create coverage report
+      run : gcovr -r ${{github.workspace}}/dsp/src/ ${{github.workspace}}/synthtools/src/ ${{github.workspace}}/utilities/src/ ${{github.workspace}}/build/ --coveralls=${{github.workspace}}/build/coverage/lcov.info
 
     - name: Coveralls GitHub Action
       uses: coverallsapp/github-action@v1
