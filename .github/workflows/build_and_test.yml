@@ -41,7 +41,8 @@ jobs:
       run : GTEST_COLOR=1 ctest --test-dir ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --verbose
 
     - name : Create coverage report
-      run : lcov --directory ${{github.workspace}}/build --capture --output=${{github.workspace}}/build/lcov.info
+      run : |
+            lcov --directory ${{github.workspace}}/build --capture --output=${{github.workspace}}/build/lcov.info
             lcov --remove ${{github.workspace}}/build/coverage/lcov.info 'deps/*' '*/*Test*' --output-file ${{github.workspace}}/build/coverage/lcov.info
 
     - name: Coveralls GitHub Action
