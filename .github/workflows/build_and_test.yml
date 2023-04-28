@@ -44,6 +44,6 @@ jobs:
       run : gcovr -r ${{github.workspace}}/dsp/src/ ${{github.workspace}}/synthtools/src/ ${{github.workspace}}/utilities/src/ ${{github.workspace}}/build/ --coveralls=${{github.workspace}}/build/lcov.info -v
 
     - name: Coveralls GitHub Action
-      uses: coverallsapp/github-action@v1
+      uses: coverallsapp/github-action@v2
       with:
         path-to-lcov: ${{github.workspace}}/build/lcov.info
