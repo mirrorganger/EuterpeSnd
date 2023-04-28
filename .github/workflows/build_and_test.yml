@@ -43,7 +43,7 @@ jobs:
     - name : Create coverage report
       run : |
             lcov --directory ${{github.workspace}}/build --capture --output=${{github.workspace}}/build/lcov.info
-            lcov --remove ${{github.workspace}}/build/coverage/lcov.info 'deps/*' '*/*Test*' --output-file ${{github.workspace}}/build/coverage/lcov.info
+            lcov --remove ${{github.workspace}}/build/lcov.info 'deps/*' '*/*Test*' --output-file ${{github.workspace}}/build/lcov.info
 
     - name: Coveralls GitHub Action
       uses: coverallsapp/github-action@v2
