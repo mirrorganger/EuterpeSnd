@@ -47,3 +47,4 @@ jobs:
       uses: coverallsapp/github-action@v2
       with:
         path-to-lcov: ${{github.workspace}}/build/lcov.info
+        debug: true
