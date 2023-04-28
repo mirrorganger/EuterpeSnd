@@ -45,7 +45,8 @@ jobs:
             lcov --directory ${{github.workspace}}/build --capture --output=${{github.workspace}}/build/lcov.info
             lcov --remove ${{github.workspace}}/build/lcov.info '*deps/*' '/usr/include/*' '*/*Test*' --output-file ${{github.workspace}}/build/lcov.info
 
-    - name: Coveralls GitHub Action
-      uses: coverallsapp/github-action@v2
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
       with:
-        path-to-lcov: ${{github.workspace}}/build/lcov.info
+        token: ${{secrets.CODECOV_TOKEN}}
+        file:  ${{github.workspace}}/build/lcov.info
