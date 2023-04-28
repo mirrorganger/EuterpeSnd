@@ -36,3 +36,6 @@ jobs:
 
     - name : Tests
       run : GTEST_COLOR=1 ctest --test-dir ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --verbose
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
