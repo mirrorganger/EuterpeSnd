@@ -22,7 +22,7 @@ jobs:
       run  : sudo apt-get install -y libasound2-dev
 
     - name : install gcovr
-      run  : pip install gcovr
+      run  : sudo apt-get install -y lcov
 
     - uses: actions/checkout@v3
       with:
@@ -41,7 +41,7 @@ jobs:
       run : GTEST_COLOR=1 ctest --test-dir ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --verbose
 
     - name : Create coverage report
-      run : gcovr -r ${{github.workspace}}/dsp/src/ ${{github.workspace}}/synthtools/src/ ${{github.workspace}}/utilities/src/ ${{github.workspace}}/build/ --coveralls=${{github.workspace}}/build/lcov.info --coveralls-pretty
+      run : lcov --directory ${{github.workspace}}/build --capture --output=${{github.workspace}}/build/lcov.info
 
     - name: Coveralls GitHub Action
       uses: coverallsapp/github-action@v2
