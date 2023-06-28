@@ -148,13 +148,6 @@ void AdsrEnv::updateRates() {
       (-_releaseSection.overShoot) * (1.0 - _releaseSection.advanceMultiplier);
 }
 
-/*
-double AdsrEnv::getRateMult(double startLevel, double endLevel, SecondsDur
-intervalTime) { return 1.0 + (log(endLevel) - log(startLevel)) /
-(intervalTime.count() * _sampleRate);
-}
-*/
-
 double AdsrEnv::getRateMult(double startLevel, double endLevel,
                             dsp::AdsrEnv::SecondsDur intervalTime) {
   return exp(-log(endLevel / startLevel) /

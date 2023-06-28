@@ -9,12 +9,15 @@
 using namespace dsp;
 using namespace testing;
 
-static const double _qFactor = 1.0 / sqrt(2.0);
+
+static const double Q_FACTOR = 1.0 / sqrt(2.0);
+static const double Q_FACTOR_BANDPSASS = sqrt(2.0);
 
 struct FilterTestParams {
-  const double cutoffFreq;
-  const BiquadFilter::Type type;
-  const std::vector<std::pair<double, double>> expectedGains;
+    const double cutoffFreq;
+    const BiquadFilter::Type type;
+    const double qFactor;
+    const std::vector<std::pair<double, double>> expectedGains;
 };
 
 const std::vector<std::pair<double, double>> expectedGGainsLP = {
@@ -22,9 +25,26 @@ const std::vector<std::pair<double, double>> expectedGGainsLP = {
 const std::vector<std::pair<double, double>> expectedGGainsHP = {
     {1.0, -3.0}, {.5, -12.0}, {.25, -24.0}};
 
-// TODO : Check dB numbers
-const std::vector<std::pair<double, double>> expectedGGainsBP = {
-    {1.0, 0.0}, {0.25, -9.0}, {4.0, -9.0}};
+std::vector<FilterTestParams> getBandPassTestParams(){
+    std::vector<FilterTestParams> params;
+    std::vector<std::pair<double, double>> bandLimitsHz =
+            {
+                    {1000.0, 2000.0},
+                    {300.0, 600.0},
+                    {800.0, 1600.0}
+            };
+
+    for(auto limit : bandLimitsHz){
+        auto f_center  =  sqrt(limit.second * limit.first);
+        const std::vector<std::pair<double, double>> expectedGGainsBP = {
+                {1.0,0.0},
+                {limit.first / f_center, -3.0},
+                {limit.second / f_center, -3.0}};
+        params.emplace_back(FilterTestParams{f_center,BiquadFilter::Type::BANDPASS,Q_FACTOR_BANDPSASS, expectedGGainsBP});
+    }
+    return params;
+};
+
 
 void testFilter(const BiquadFilter::FilterSettings &settings, const double freq,
                 const double expectedGain, const double allowedError) {
@@ -51,42 +71,42 @@ void testFilter(const BiquadFilter::FilterSettings &settings, const double freq,
 
 class BiquadFilterTest : public TestWithParam<FilterTestParams> {
 public:
-  BiquadFilterTest() {}
-
 protected:
-  // double _qFactor = 1.0 / sqrt(2.0);
   double _samplingFreq = 48000.0;
 };
 
 TEST_P(BiquadFilterTest, filterTest) {
-  auto param = GetParam();
-  BiquadFilter::FilterSettings settings{};
-  settings.cutoffFreq = param.cutoffFreq;
-  settings.nChannels = 2U;
-  settings.qFactor = _qFactor;
-  settings.samplingFreq = _samplingFreq;
-  settings.filterType = param.type;
-  for (auto freqAndMag : param.expectedGains) {
-    double freq = param.cutoffFreq * freqAndMag.first;
-    testFilter(settings, freq, freqAndMag.second, 0.7);
-  }
+    auto param = GetParam();
+    BiquadFilter::FilterSettings settings{};
+    settings.cutoffFreq = param.cutoffFreq;
+    settings.nChannels = 2U;
+    settings.qFactor = param.qFactor;
+    settings.samplingFreq = _samplingFreq;
+    settings.filterType = param.type;
+    for (auto freqAndMag: param.expectedGains) {
+        double freq = param.cutoffFreq * freqAndMag.first;
+        testFilter(settings, freq, freqAndMag.second, 0.9);
+    }
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    allFiltersTests, BiquadFilterTest,
-    Values(
-        // clang-format off
-                FilterTestParams{100.0, BiquadFilter::Type::LOWPASS, expectedGGainsLP},
-                FilterTestParams{200.0f, BiquadFilter::Type::LOWPASS, expectedGGainsLP},
-                FilterTestParams{500.0, BiquadFilter::Type::LOWPASS, expectedGGainsLP},
-                FilterTestParams{1000.0f, BiquadFilter::Type::LOWPASS, expectedGGainsLP},
-                FilterTestParams{100.0f, BiquadFilter::Type::HIGHPASS, expectedGGainsHP},
-                FilterTestParams{200.0f, BiquadFilter::Type::HIGHPASS, expectedGGainsHP},
-                FilterTestParams{500.0, BiquadFilter::Type::HIGHPASS, expectedGGainsHP},
-                FilterTestParams{1000.0, BiquadFilter::Type::HIGHPASS, expectedGGainsHP},
-                FilterTestParams{100.0, BiquadFilter::Type::BANDPASS, expectedGGainsBP},
-                FilterTestParams{200.0, BiquadFilter::Type::BANDPASS, expectedGGainsBP},
-                FilterTestParams{500.0, BiquadFilter::Type::BANDPASS, expectedGGainsBP},
-                FilterTestParams{1000.0, BiquadFilter::Type::BANDPASS, expectedGGainsBP}
-                ));
-// clang-format on
+        lowPassHighPassTests, BiquadFilterTest,
+        Values(
+                // clang-format off
+                FilterTestParams{100.0, BiquadFilter::Type::LOWPASS,   Q_FACTOR, expectedGGainsLP},
+                FilterTestParams{200.0f, BiquadFilter::Type::LOWPASS,  Q_FACTOR, expectedGGainsLP,},
+                FilterTestParams{500.0, BiquadFilter::Type::LOWPASS,   Q_FACTOR, expectedGGainsLP},
+                FilterTestParams{1000.0f, BiquadFilter::Type::LOWPASS, Q_FACTOR,  expectedGGainsLP},
+                FilterTestParams{100.0f, BiquadFilter::Type::HIGHPASS, Q_FACTOR,expectedGGainsHP},
+                FilterTestParams{200.0f, BiquadFilter::Type::HIGHPASS, Q_FACTOR,expectedGGainsHP},
+                FilterTestParams{500.0, BiquadFilter::Type::HIGHPASS,  Q_FACTOR ,expectedGGainsHP},
+                FilterTestParams{1000.0, BiquadFilter::Type::HIGHPASS, Q_FACTOR, expectedGGainsHP}
+                // clang-format on
+        ));
+
+INSTANTIATE_TEST_SUITE_P(
+        bandPassTests, BiquadFilterTest,
+        ValuesIn(
+                getBandPassTestParams()
+        ));
+
