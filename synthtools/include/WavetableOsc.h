@@ -16,6 +16,7 @@ float interpolation(const std::vector<float> &buffer, float indexPtr);
 
 class WavetableOsc : public utilities::AudioProcessor<float> {
 public:
+  WavetableOsc() = default;
   WavetableOsc(const utilities::AudioBufferTools::OscillatorType oscillatorType,
                const uint32_t tableSize, const float sampleRate,
                const bool useInterpolation = true);
