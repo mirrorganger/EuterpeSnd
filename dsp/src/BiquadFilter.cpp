@@ -49,9 +49,8 @@ void BiquadFilter::setCentralFreq(double cutoffFreq) {
 }
 
 void BiquadFilter::clear() {
-  for (auto v : {_z1, _z2}) {
-    std::fill(v.begin(), v.end(), 0.0);
-  }
+  std::fill(_z1.begin(), _z1.end(), 0.0);
+  std::fill(_z2.begin(), _z2.end(), 0.0);
 }
 
 void BiquadFilter::process(utilities::AudioBuffer<float> &buffer) {
@@ -71,7 +70,7 @@ void BiquadFilter::update() {
   switch (_filterSettings.filterType) {
   case Type::LOWPASS: {
     auto k =
-        1.0 / std::tan(static_cast<double>(M_PI) * _filterSettings.cutoffFreq /
+        1.0 / std::tan(M_PI * _filterSettings.cutoffFreq /
                        _filterSettings.samplingFreq);
     auto kSquared = k * k;
     auto qInv = 1.0 / _filterSettings.qFactor;
@@ -84,7 +83,7 @@ void BiquadFilter::update() {
     break;
   }
   case Type::HIGHPASS: {
-    auto k = std::tan(static_cast<double>(M_PI) * _filterSettings.cutoffFreq /
+    auto k = std::tan(M_PI * _filterSettings.cutoffFreq /
                       _filterSettings.samplingFreq);
     auto kSquared = k * k;
     auto qInv = 1.0 / _filterSettings.qFactor;
@@ -98,7 +97,7 @@ void BiquadFilter::update() {
   }
   case Type::BANDPASS: {
     auto k =
-        1.0 / std::tan(static_cast<double>(M_PI) * _filterSettings.cutoffFreq /
+        1.0 / std::tan(M_PI * _filterSettings.cutoffFreq /
                        _filterSettings.samplingFreq);
     auto kSquared = k * k;
     auto qInv = 1.0 / _filterSettings.qFactor;

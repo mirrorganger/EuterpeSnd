@@ -38,13 +38,14 @@ public:
   void setType(Type filterType);
   void setCentralFreq(double centralFreq);
   void clear();
-  void process(utilities::AudioBuffer<NumericDataType> &buffer);
+  void process(utilities::AudioBuffer<NumericDataType> &buffer) override;
 
 private:
   void reset();
   void update();
   FilterSettings _filterSettings{0};
-  std::vector<double> _z1{}, _z2{};
+  std::vector<double> _z1{};
+  std::vector<double> _z2{};
   BiquadCoeff _biquadCoeff;
 };
 
