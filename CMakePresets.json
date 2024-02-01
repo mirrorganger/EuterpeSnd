@@ -1,0 +1,52 @@
+{
+    "version": 7,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 26,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "EuterpeSnd-base",
+            "hidden": true,
+            "displayName": "EuterpeSnd base",
+            "description": "EuterpeSnd base cmake config",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE":"Debug"
+            } 
+        },
+        {
+            "name": "EuterpeSnd-debug",
+            "displayName": "EuterpeSnd Debug",
+            "inherits" : "EuterpeSnd-base"
+        },
+        {
+            "name": "EuterpeSnd-release",
+            "displayName": "EuterpeSnd Release",
+            "inherits" : "EuterpeSnd-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE":"Release"
+            }
+
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "EuterpeSnd-build-base",
+            "hidden": true,
+            "configurePreset": "EuterpeSnd-debug",
+            "jobs": 4
+        },
+        {
+            "name": "EuterpeSnd-build-debug",
+            "inherits" : "EuterpeSnd-build-base"
+        },
+        {
+            "name": "EuterpeSnd-build-release",
+            "inherits" : "EuterpeSnd-build-base",
+            "configurePreset": "EuterpeSnd-release"
+        }
+    ]
+}
