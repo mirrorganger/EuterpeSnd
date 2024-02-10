@@ -138,8 +138,9 @@ public:
 
   using CircularBuffer<T, BufferT>::CircularBuffer;
 
-  T const &operator[](IndexType index) const {
-    return linear_interpolation(static_cast<base_type const &>(*this), index);
+  T operator[](IndexType index) const {
+      linear_interpolation interpolation;
+      return interpolation(static_cast<base_type const &>(*this), index);
   }
 };
 
