@@ -17,7 +17,7 @@ void Lfo::reset(Lfo::NumericType samplingFreq_hz, Lfo::NumericType oscFreq_hz){
     _moduloCounter = 0.0;
 }
   
-Lfo::NumericType Lfo::getNextSample(){
+Lfo::NumericType Lfo::operator()(){
     NumericType out = {};
     switch (_type)
     {

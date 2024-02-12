@@ -18,7 +18,7 @@ public:
 
   DataType process(DataType in) {
     auto out = DataType{};
-    auto lfoOut = static_cast<DataType>(_lfo.getNextSample());
+    auto lfoOut = static_cast<DataType>(_lfo());
     _delayLine.setDelay(static_cast<float>(_baseDelay  +  lfoOut * _lfoDepth));
     DataType yn = _delayLine.read();
     DataType dn = in + _feedback * yn;

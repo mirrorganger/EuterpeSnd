@@ -14,7 +14,7 @@ public:
 
   Lfo(NumericType samplingFreq_hz, NumericType oscFreq_hz, WaveFormT type);
   void reset(NumericType samplingFreq_hz, NumericType oscFreq_hz);
-  NumericType getNextSample();
+  NumericType operator()();
   
 private:
   void advanceCounter();

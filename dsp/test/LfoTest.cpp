@@ -55,7 +55,7 @@ TEST(LfoTest, triangleWaweForm) {
   auto modulation = std::vector<dsp::Lfo::NumericType>(stepsPerPeriod + 1U);
 
   std::for_each(modulation.begin(), modulation.end(),
-                [&lfo](auto &v) { v = lfo.getNextSample(); });
+                [&lfo](auto &v) { v = lfo(); });
 
   // THEN
   EXPECT_NEAR(modulation[0], 1.0F, MAX_ERROR);
@@ -79,7 +79,7 @@ TEST(LfoTest, sawWaweForm) {
   // WHEN
   auto modulation = std::vector<dsp::Lfo::NumericType>(stepsPerPeriod + 1U);
   std::for_each(modulation.begin(), modulation.end(),
-                [&lfo](auto &v) { v = lfo.getNextSample(); });
+                [&lfo](auto &v) { v = lfo(); });
 
   // THEN
   EXPECT_NEAR(modulation[0], -1.0F, MAX_ERROR); 
@@ -102,7 +102,7 @@ TEST(LfoTest, sineWaweForm) {
   // WHEN
   auto modulation = std::vector<dsp::Lfo::NumericType>(stepsPerPeriod + 1U);
   std::for_each(modulation.begin(), modulation.end(),
-                [&lfo](auto &v) { v = lfo.getNextSample(); });
+                [&lfo](auto &v) { v = lfo(); });
 
   // THEN
   EXPECT_NEAR(modulation[0], .0F, MAX_ERROR); 
