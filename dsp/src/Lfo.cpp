@@ -6,16 +6,18 @@ namespace dsp
 {
 
     Lfo::Lfo(Lfo::NumericType samplingFreq_hz, Lfo::NumericType oscFreq_hz, Lfo::WaveFormT type)
-            : _freq_hz(oscFreq_hz), _type(type),
-              _phaseIncrement(_freq_hz / samplingFreq_hz) {
+            : _type(type),
+              _phaseIncrement(oscFreq_hz / samplingFreq_hz) {
         std::cout << "Lfo created " << _phaseIncrement << std::endl;
     }
 
     void Lfo::reset(Lfo::NumericType samplingFreq_hz, Lfo::NumericType oscFreq_hz){
-        _freq_hz = oscFreq_hz;
-        _phaseIncrement = _freq_hz / samplingFreq_hz;
+        _phaseIncrement = oscFreq_hz / samplingFreq_hz;
         _moduloCounter = 0.0;
-        std::cout << "Lfo reset " << _phaseIncrement << std::endl;
+    }
+
+    void Lfo::update(Lfo::NumericType samplingFreq_hz, Lfo::NumericType oscFreq_hz){
+        _phaseIncrement = oscFreq_hz / samplingFreq_hz;
     }
 
     Lfo::NumericType Lfo::get(){
@@ -37,6 +39,12 @@ namespace dsp
         }
         advanceCounter();
         return out;
+    }
+
+    void Lfo::getBlock(dsp::Lfo::NumericType *const buffer, size_t numSamples){
+        for (size_t sample = 0; sample < numSamples; ++sample) {
+            buffer[sample] = get();
+        }
     }
 
     void Lfo::advanceCounter()
