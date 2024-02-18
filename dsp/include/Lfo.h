@@ -11,6 +11,7 @@ namespace dsp
         void reset(NumericType samplingFreq_hz, NumericType oscFreq_hz);
         void update(NumericType samplingFreq_hz, NumericType oscFreq_hz);
         NumericType get();
+        NumericType operator()();
         void getBlock(NumericType* const buffer, size_t numSamples);
     private:
         void advanceCounter();

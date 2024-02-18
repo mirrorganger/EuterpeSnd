@@ -41,6 +41,27 @@ namespace dsp
         return out;
     }
 
+    Lfo::NumericType Lfo::operator()(){
+        NumericType out = {};
+        switch (_type)
+        {
+            case Lfo::WaveFormT::SAW:
+                out = static_cast<NumericType>(2.0 * _moduloCounter - 1.0); // unipolar to bipolar
+                break;
+            case Lfo::WaveFormT::TRIANGLE:
+                out = static_cast<NumericType>(2.0 * _moduloCounter - 1.0); // unipolar to bipolar
+                out = static_cast<NumericType>(2.0 * fabs(out) - 1.0); // bipolar to triangle
+                break;
+            case Lfo::WaveFormT::SINE:
+                out = sinf(_moduloCounter * TWO_PI);
+                break;
+            default:
+                break;
+        }
+        advanceCounter();
+        return out;
+    }
+
     void Lfo::getBlock(dsp::Lfo::NumericType *const buffer, size_t numSamples){
         for (size_t sample = 0; sample < numSamples; ++sample) {
             buffer[sample] = get();
