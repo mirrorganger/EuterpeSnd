@@ -18,8 +18,7 @@ public:
   float operator()() const { return this->back(); }
 
   // returns delay at index
-  float operator()(index_type index) const { return (*this)[index];}
-
+  float operator()(index_type index) const { return (*this)[index]; }
 };
 
 using FractionalDelay = DelayT<utilities::CircularBufferFrac<float>>;
