@@ -40,7 +40,7 @@ FUNCTION(setup_library)
 	find_files_matching_patterns(privateIncludes ${LIBRARY_PATH}src "${HEADER_FILES_FILTER_MASK}")
 	find_files_matching_patterns(src ${LIBRARY_PATH}src "${SOURCE_FILES_FILTER_MASK}")
 	
-	add_library(${LIBRARY_NAME} ${publicIncludes} ${src} ${privateIncludes})
+	add_library(${LIBRARY_NAME} STATIC ${publicIncludes} ${src} ${privateIncludes})
 	if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${LIBRARY_PATH}include")
 		message(STATUS "${LIBRARY_PATH}")
 		target_include_directories(${LIBRARY_NAME} PUBLIC ${LIBRARY_PATH}include)
@@ -53,6 +53,7 @@ FUNCTION(setup_library)
 	add_dependencies(ALL_COMPILE ${LIBRARY_NAME})
 
 	#target_compile_options(${LIBRARY_NAME} PRIVATE -Wall -Wextra)
+	target_compile_options(${LIBRARY_NAME} PRIVATE -fPIC)
 	enable_coverage(${LIBRARY_NAME})
 
 	if(${LIBRARY_UNIT_TEST})
