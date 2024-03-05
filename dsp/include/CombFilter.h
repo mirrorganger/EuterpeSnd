@@ -10,7 +10,7 @@ public:
   CombFilter(float sampleRate_hz, float delayMax_ms, float gain, bool lpfEnabled = true)
       : _g(gain), _sampleRate_hz(sampleRate_hz),
         _delay(delayMax_ms * sampleRate_hz / 1000.0F), _lpfEnabled(lpfEnabled){
-          _lpf.setFeedbackGain(1.0F-gain);
+          _lpf.setFeedbackGain(0.5F);
         }
 
   void prepare(float sampleRate_hz, float delay_ms) {
@@ -19,13 +19,17 @@ public:
     setDelay(delay_ms);
   }
 
-  void setGain(float gain) { _g = gain; _lpf.setFeedbackGain(1.0F-gain); }
+  void setDamping(float damping) {
+    _lpf.setFeedbackGain(damping);
+  }
+
+  void setGain(float gain) { _g = gain;}
 
   void setDelay(float delay_ms) {
     _delayIndex = (delay_ms * _sampleRate_hz / 1000.0F);
   }
 
-  float process(const float xn) {
+  inline float process(const float xn) {
     auto yn = _delay[_delayIndex];
     if(_lpfEnabled){
       yn = _lpf.process(yn);      
