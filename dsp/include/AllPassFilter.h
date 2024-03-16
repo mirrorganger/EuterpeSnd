@@ -1,14 +1,10 @@
 #pragma once
 
-
 #include "Delay.hpp"
 
-namespace dsp
-{
+namespace dsp {
 
-
-class AllPassFilter
-{
+class AllPassFilter {
 public:
   AllPassFilter(float sampleRate_hz, float delayMax_ms, float gain)
       : _g(gain), _sampleRate_hz(sampleRate_hz),
@@ -26,6 +22,8 @@ public:
     _delayIndex = (delay_ms * _sampleRate_hz / 1000.F);
   }
 
+  void setDelaySamples(float delaySamples) { _delayIndex = delaySamples; }
+
   float process(const float xn) {
     auto wn_D = _delay[_delayIndex];
     auto wn = xn + _g * wn_D;
@@ -33,12 +31,15 @@ public:
     return wn_D + -_g * wn;
   }
 
+  float getSampleAtDelay(float delayInSamples) {
+    return _delay[delayInSamples];
+  }
+
 private:
-    float _g;
-    float _delayIndex;
-    float _sampleRate_hz;
-    FractionalDelay _delay;
+  float _g;
+  float _delayIndex;
+  float _sampleRate_hz;
+  FractionalDelay _delay;
 };
 
-
-}
+} // namespace dsp
