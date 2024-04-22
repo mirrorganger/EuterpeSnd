@@ -25,14 +25,13 @@ const std::vector<std::pair<double, double>> expectedGGainsLP = {
 const std::vector<std::pair<double, double>> expectedGGainsHP = {
     {1.0, -3.0}, {.5, -12.0}, {.25, -24.0}};
 
-template<double BoostGain = 12.0>
-const std::vector<std::pair<double,double>> expectedGainsLS = {
-    {.3, BoostGain}, {5.0 , 0.0}};
+template <double BoostGain = 12.0>
+const std::vector<std::pair<double, double>> expectedGainsLS = {{.3, BoostGain},
+                                                                {5.0, 0.0}};
 
-template<double BoostGain = 12.0>
-const std::vector<std::pair<double,double>> expectedGainsHS = {
-    {.1, 0.0},{5.0, BoostGain}};
-
+template <double BoostGain = 12.0>
+const std::vector<std::pair<double, double>> expectedGainsHS = {
+    {.1, 0.0}, {5.0, BoostGain}};
 
 std::vector<FilterTestParams> getBandPassTestParams() {
   std::vector<FilterTestParams> params;

@@ -67,12 +67,12 @@ DataType getChannelMag(const AudioBuffer<DataType> &buffer,
   auto readPtr = buffer.getReadPointer();
   auto channelMag = std::numeric_limits<DataType>::min();
   for (uint32_t i = startSample; i < startSample + numSamples; i++) {
-    channelMag = std::max(std::abs(readPtr[i * buffer.getNumberOfChannels() + channel]),
-                          channelMag);
+    channelMag =
+        std::max(std::abs(readPtr[i * buffer.getNumberOfChannels() + channel]),
+                 channelMag);
   }
   return channelMag;
 }
-
 
 } // namespace utilities
 #endif

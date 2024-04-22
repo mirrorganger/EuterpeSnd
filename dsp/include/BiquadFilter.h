@@ -13,7 +13,13 @@ using NumericDataType = float;
 
 class BiquadFilter : utilities::AudioProcessor<NumericDataType> {
 public:
-  enum class Type : uint8_t { LOWPASS, HIGHPASS, BANDPASS, LOW_SHELV, HIGH_SHELV};
+  enum class Type : uint8_t {
+    LOWPASS,
+    HIGHPASS,
+    BANDPASS,
+    LOW_SHELV,
+    HIGH_SHELV
+  };
 
   struct FilterSettings {
     double samplingFreq;
