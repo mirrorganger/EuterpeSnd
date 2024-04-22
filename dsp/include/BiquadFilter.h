@@ -13,7 +13,7 @@ using NumericDataType = float;
 
 class BiquadFilter : utilities::AudioProcessor<NumericDataType> {
 public:
-  enum class Type : uint8_t { LOWPASS, HIGHPASS, BANDPASS };
+  enum class Type : uint8_t { LOWPASS, HIGHPASS, BANDPASS, LOW_SHELV, HIGH_SHELV};
 
   struct FilterSettings {
     double samplingFreq;
@@ -21,6 +21,7 @@ public:
     double cutoffFreq;
     Type filterType;
     uint32_t nChannels;
+    double gain_db;
   };
 
   struct BiquadCoeff {
@@ -32,8 +33,6 @@ public:
 
   void setUp(const FilterSettings &filterSettings);
 
-  // TODO :All these setters call to update, and change the
-  // biquad coeficients from another thread. Create a spin lock mutex??
   void setQfactor(double qFactor);
   void setType(Type filterType);
   void setCentralFreq(double centralFreq);

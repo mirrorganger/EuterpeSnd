@@ -16,6 +16,7 @@ struct FilterTestParams {
   const double cutoffFreq;
   const BiquadFilter::Type type;
   const double qFactor;
+  const double gain_db;
   const std::vector<std::pair<double, double>> expectedGains;
 };
 
@@ -23,6 +24,15 @@ const std::vector<std::pair<double, double>> expectedGGainsLP = {
     {1.0, -3.0}, {2.0, -12.0}, {4.0, -24.0}};
 const std::vector<std::pair<double, double>> expectedGGainsHP = {
     {1.0, -3.0}, {.5, -12.0}, {.25, -24.0}};
+
+template<double BoostGain = 12.0>
+const std::vector<std::pair<double,double>> expectedGainsLS = {
+    {.3, BoostGain}, {5.0 , 0.0}};
+
+template<double BoostGain = 12.0>
+const std::vector<std::pair<double,double>> expectedGainsHS = {
+    {.1, 0.0},{5.0, BoostGain}};
+
 
 std::vector<FilterTestParams> getBandPassTestParams() {
   std::vector<FilterTestParams> params;
@@ -36,7 +46,8 @@ std::vector<FilterTestParams> getBandPassTestParams() {
         {limit.first / f_center, -3.0},
         {limit.second / f_center, -3.0}};
     params.emplace_back(FilterTestParams{f_center, BiquadFilter::Type::BANDPASS,
-                                         Q_FACTOR_BANDPSASS, expectedGGainsBP});
+                                         Q_FACTOR_BANDPSASS, 1.0,
+                                         expectedGGainsBP});
   }
   return params;
 };
@@ -78,6 +89,7 @@ TEST_P(BiquadFilterTest, filterTest) {
   settings.qFactor = param.qFactor;
   settings.samplingFreq = _samplingFreq;
   settings.filterType = param.type;
+  settings.gain_db = param.gain_db;
   for (auto freqAndMag : param.expectedGains) {
     double freq = param.cutoffFreq * freqAndMag.first;
     testFilter(settings, freq, freqAndMag.second, 0.9);
@@ -88,14 +100,23 @@ INSTANTIATE_TEST_SUITE_P(
     lowPassHighPassTests, BiquadFilterTest,
     Values(
         // clang-format off
-                FilterTestParams{100.0, BiquadFilter::Type::LOWPASS,   Q_FACTOR, expectedGGainsLP},
-                FilterTestParams{200.0f, BiquadFilter::Type::LOWPASS,  Q_FACTOR, expectedGGainsLP,},
-                FilterTestParams{500.0, BiquadFilter::Type::LOWPASS,   Q_FACTOR, expectedGGainsLP},
-                FilterTestParams{1000.0f, BiquadFilter::Type::LOWPASS, Q_FACTOR,  expectedGGainsLP},
-                FilterTestParams{100.0f, BiquadFilter::Type::HIGHPASS, Q_FACTOR,expectedGGainsHP},
-                FilterTestParams{200.0f, BiquadFilter::Type::HIGHPASS, Q_FACTOR,expectedGGainsHP},
-                FilterTestParams{500.0, BiquadFilter::Type::HIGHPASS,  Q_FACTOR ,expectedGGainsHP},
-                FilterTestParams{1000.0, BiquadFilter::Type::HIGHPASS, Q_FACTOR, expectedGGainsHP} // clang-format on
+                FilterTestParams{100.0, BiquadFilter::Type::LOWPASS,   Q_FACTOR, 1.0, expectedGGainsLP},
+                FilterTestParams{200.0f, BiquadFilter::Type::LOWPASS,  Q_FACTOR, 1.0, expectedGGainsLP,},
+                FilterTestParams{500.0, BiquadFilter::Type::LOWPASS,   Q_FACTOR, 1.0,expectedGGainsLP},
+                FilterTestParams{1000.0f, BiquadFilter::Type::LOWPASS, Q_FACTOR, 1.0, expectedGGainsLP},
+                FilterTestParams{100.0f, BiquadFilter::Type::HIGHPASS, Q_FACTOR, 1.0,expectedGGainsHP},
+                FilterTestParams{200.0f, BiquadFilter::Type::HIGHPASS, Q_FACTOR, 1.0,expectedGGainsHP},
+                FilterTestParams{500.0, BiquadFilter::Type::HIGHPASS,  Q_FACTOR ,1.0, expectedGGainsHP},
+                FilterTestParams{1000.0, BiquadFilter::Type::HIGHPASS, Q_FACTOR ,1.0, expectedGGainsHP}, 
+                FilterTestParams{800.0, BiquadFilter::Type::LOW_SHELV, Q_FACTOR ,12.0, expectedGainsLS<12.0>},                 
+                FilterTestParams{800.0, BiquadFilter::Type::LOW_SHELV, Q_FACTOR ,2.0, expectedGainsLS<2.0>},                 
+                FilterTestParams{800.0, BiquadFilter::Type::LOW_SHELV, Q_FACTOR ,-12.0, expectedGainsLS<-12.0>},                 
+                FilterTestParams{800.0, BiquadFilter::Type::LOW_SHELV, Q_FACTOR ,-2.0, expectedGainsLS<-2.0>},
+                FilterTestParams{800.0, BiquadFilter::Type::HIGH_SHELV, Q_FACTOR ,12.0, expectedGainsHS<12.0>},                 
+                FilterTestParams{800.0, BiquadFilter::Type::HIGH_SHELV, Q_FACTOR ,2.0, expectedGainsHS<2.0>},                 
+                FilterTestParams{800.0, BiquadFilter::Type::HIGH_SHELV, Q_FACTOR ,-12.0, expectedGainsHS<-12.0>},                 
+                FilterTestParams{800.0, BiquadFilter::Type::HIGH_SHELV, Q_FACTOR ,-2.0, expectedGainsHS<-2.0>}
+          //clang-format on
         ));
 
 INSTANTIATE_TEST_SUITE_P(bandPassTests, BiquadFilterTest,
