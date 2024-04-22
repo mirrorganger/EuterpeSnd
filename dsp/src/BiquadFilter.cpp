@@ -1,6 +1,8 @@
 
 #include "BiquadFilter.h"
 
+#include "Conversions.h"
+
 #include <math.h>
 
 namespace dsp {
@@ -70,9 +72,8 @@ void BiquadFilter::process(utilities::AudioBuffer<float> &buffer) {
 void BiquadFilter::update() {
   switch (_filterSettings.filterType) {
   case Type::LOWPASS: {
-    auto k =
-        1.0 / std::tan(static_cast<double>(M_PI) * _filterSettings.cutoffFreq /
-                       _filterSettings.samplingFreq);
+    auto k = 1.0 / std::tan(M_PI * _filterSettings.cutoffFreq /
+                            _filterSettings.samplingFreq);
     auto kSquared = k * k;
     auto qInv = 1.0 / _filterSettings.qFactor;
     auto norm = 1.0 / (1.0 + k * qInv + kSquared);
@@ -84,7 +85,7 @@ void BiquadFilter::update() {
     break;
   }
   case Type::HIGHPASS: {
-    auto k = std::tan(static_cast<double>(M_PI) * _filterSettings.cutoffFreq /
+    auto k = std::tan(M_PI * _filterSettings.cutoffFreq /
                       _filterSettings.samplingFreq);
     auto kSquared = k * k;
     auto qInv = 1.0 / _filterSettings.qFactor;
@@ -97,9 +98,8 @@ void BiquadFilter::update() {
     break;
   }
   case Type::BANDPASS: {
-    auto k =
-        1.0 / std::tan(static_cast<double>(M_PI) * _filterSettings.cutoffFreq /
-                       _filterSettings.samplingFreq);
+    auto k = 1.0 / std::tan(M_PI * _filterSettings.cutoffFreq /
+                            _filterSettings.samplingFreq);
     auto kSquared = k * k;
     auto qInv = 1.0 / _filterSettings.qFactor;
     auto norm = 1.0 / (1.0 + k * qInv + kSquared);
@@ -108,6 +108,44 @@ void BiquadFilter::update() {
     _biquadCoeff.b2 = -norm * k * qInv;
     _biquadCoeff.a1 = norm * 2.0 * (1.0 - kSquared);
     _biquadCoeff.a2 = norm * (1.0 - k * qInv + kSquared);
+    break;
+  }
+  case Type::LOW_SHELV: {
+    /**
+     * Coeff values taken from Udo zolzer.
+     * DAFX Digital Audio Effects. 2nd edition
+     * Table 2.3
+     */
+    auto K = std::tan(M_PI * _filterSettings.cutoffFreq /
+                      _filterSettings.samplingFreq);
+    auto K_2 = K * K;
+    auto w0 = utilities::fromDecibelsToGain(_filterSettings.gain_db);
+    auto sq2 = std::sqrt(2.0);
+    auto a0 = 1.0 + sq2 * K + K_2;
+    _biquadCoeff.a1 = (2.0 * (K_2 - 1.0)) / a0;
+    _biquadCoeff.a2 = (1 - sq2 * K + K_2) / a0;
+    _biquadCoeff.b0 = (1 + std::sqrt(2.0 * w0) * K + w0 * K_2) / a0;
+    _biquadCoeff.b1 = (2.0 * (w0 * K_2 - 1.0)) / a0;
+    _biquadCoeff.b2 = (1 - std::sqrt(2.0 * w0) * K + w0 * K_2) / a0;
+    break;
+  }
+  case Type::HIGH_SHELV: {
+    /**
+     * Coeff values taken from Udo zolzer.
+     * DAFX Digital Audio Effects. 2nd edition
+     * Table 2.3
+     */
+    auto K = std::tan(M_PI * _filterSettings.cutoffFreq /
+                      _filterSettings.samplingFreq);
+    auto K_2 = K * K;
+    auto w0 = utilities::fromDecibelsToGain(_filterSettings.gain_db);
+    auto sq2 = std::sqrt(2.0);
+    auto a0 = 1.0 + sq2 * K + K_2;
+    _biquadCoeff.a1 = (2.0 * (K_2 - 1.0)) / a0;
+    _biquadCoeff.a2 = (1 - sq2 * K + K_2) / a0;
+    _biquadCoeff.b0 = (w0 + std::sqrt(2.0 * w0) * K + K_2) / a0;
+    _biquadCoeff.b1 = (2.0 * (K_2 - w0)) / a0;
+    _biquadCoeff.b2 = (w0 - std::sqrt(2.0 * w0) * K + K_2) / a0;
     break;
   }
   default:
