@@ -5,6 +5,9 @@
 namespace dsp
 {
 
+// source : https://www.earlevel.com/main/2012/12/15/a-one-pole-filter/
+// https://ccrma.stanford.edu/~jos/fp/One_Pole.html
+// Make a High pass implementation?
 class OnePoleLpf
 {
 public:
