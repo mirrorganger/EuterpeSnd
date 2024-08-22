@@ -1,14 +1,11 @@
 #include "Lfo.h"
 
 #include <cmath>
-#include <iostream>
 namespace dsp {
 
 Lfo::Lfo(Lfo::NumericType samplingFreq_hz, Lfo::NumericType oscFreq_hz,
          Lfo::WaveFormT type)
-    : _type(type), _phaseIncrement(oscFreq_hz / samplingFreq_hz) {
-  std::cout << "Lfo created " << _phaseIncrement << std::endl;
-}
+    : _type(type), _phaseIncrement(oscFreq_hz / samplingFreq_hz) {}
 
 void Lfo::reset(Lfo::NumericType samplingFreq_hz, Lfo::NumericType oscFreq_hz) {
   _phaseIncrement = oscFreq_hz / samplingFreq_hz;
