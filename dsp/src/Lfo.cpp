@@ -5,8 +5,7 @@ namespace dsp {
 
 Lfo::Lfo(Lfo::NumericType samplingFreq_hz, Lfo::NumericType oscFreq_hz,
          Lfo::WaveFormT type)
-    : _type(type), _phaseIncrement(oscFreq_hz / samplingFreq_hz) {
-}
+    : _type(type), _phaseIncrement(oscFreq_hz / samplingFreq_hz) {}
 
 void Lfo::reset(Lfo::NumericType samplingFreq_hz, Lfo::NumericType oscFreq_hz) {
   _phaseIncrement = oscFreq_hz / samplingFreq_hz;

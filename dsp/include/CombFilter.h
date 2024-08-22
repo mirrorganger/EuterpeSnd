@@ -7,11 +7,12 @@ namespace dsp {
 
 class CombFilter {
 public:
-  CombFilter(float sampleRate_hz, float delayMax_ms, float gain, bool lpfEnabled = true)
+  CombFilter(float sampleRate_hz, float delayMax_ms, float gain,
+             bool lpfEnabled = true)
       : _g(gain), _sampleRate_hz(sampleRate_hz),
-        _delay(delayMax_ms * sampleRate_hz / 1000.0F), _lpfEnabled(lpfEnabled){
-          _lpf.setFeedbackGain(0.5F);
-        }
+        _delay(delayMax_ms * sampleRate_hz / 1000.0F), _lpfEnabled(lpfEnabled) {
+    _lpf.setFeedbackGain(0.5F);
+  }
 
   void prepare(float sampleRate_hz, float delay_ms) {
     _sampleRate_hz = sampleRate_hz;
@@ -19,11 +20,9 @@ public:
     setDelay(delay_ms);
   }
 
-  void setDamping(float damping) {
-    _lpf.setFeedbackGain(damping);
-  }
+  void setDamping(float damping) { _lpf.setFeedbackGain(damping); }
 
-  void setGain(float gain) { _g = gain;}
+  void setGain(float gain) { _g = gain; }
 
   void setDelay(float delay_ms) {
     _delayIndex = (delay_ms * _sampleRate_hz / 1000.0F);
@@ -31,9 +30,9 @@ public:
 
   inline float process(const float xn) {
     auto yn = _delay[_delayIndex];
-    if(_lpfEnabled){
-      yn = _lpf.process(yn);      
-    }  
+    if (_lpfEnabled) {
+      yn = _lpf.process(yn);
+    }
     auto delayed = xn + _g * yn;
     _delay.push(delayed);
     return yn;
