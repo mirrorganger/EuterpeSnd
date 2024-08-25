@@ -45,7 +45,7 @@ jobs:
             lcov --remove ${{github.workspace}}/build/lcov.info '*deps/*' '/usr/include/*' '*/*Test*' --output-file ${{github.workspace}}/build/lcov.info
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         token: ${{secrets.CODECOV_TOKEN}}
         file:  ${{github.workspace}}/build/${{matrix.configuration}}/lcov.info
