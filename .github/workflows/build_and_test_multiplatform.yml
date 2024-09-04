@@ -21,18 +21,11 @@ jobs:
       if: runner.os == 'Linux' 
       run  : sudo apt-get install -y libasound2-dev
 
-    - name : install deps
-      if: runner.os == 'Linux' 
-      run  : sudo apt-get install -y libtinfo5
-
     - name: Install LLVM and Clang
       uses: KyleMayes/install-llvm-action@v2.0.4
       with:
         version: "18"
         env: true
-
-    - name: Print clang version
-      run: clang++ --version
 
     - name: Configure CMake
       run: >
