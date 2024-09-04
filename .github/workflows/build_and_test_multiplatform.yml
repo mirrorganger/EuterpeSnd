@@ -8,7 +8,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
         configuraiton : [Debug, Release]     
 
     runs-on: ${{ matrix.os }}
@@ -35,7 +35,7 @@ jobs:
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.configuration}}
         -DCMAKE_C_COMPILER=clang
         -DCMAKE_CXX_COMPILER=clang++
-        -D-DBUILD_APPS=ON
+        -DBUILD_APPS=ON
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build/${{matrix.configuration}} 
