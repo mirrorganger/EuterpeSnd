@@ -8,7 +8,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [macos-14]
+        os: [ubuntu-22.04]
         configuraiton : [Debug, Release]     
 
     runs-on: ${{ matrix.os }}
