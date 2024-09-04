@@ -21,11 +21,21 @@ jobs:
       if: runner.os == 'Linux' 
       run  : sudo apt-get install -y libasound2-dev
 
-    - name: Install LLVM and Clang
-      uses: KyleMayes/install-llvm-action@v2.0.4
-      with:
-        version: "18"
-        env: true
+    - name : install clang
+      if: runner.os == 'Linux' 
+      run  : >
+      sudp apt-get install -y wget &&
+      wget https://apt.llvm.org/llvm.sh && 
+      chmod u+x llvm.sh &&
+      sudo ./llvm.sh 18 &&
+      clang++ --version
+
+
+    # - name: Install LLVM and Clang
+    #   uses: KyleMayes/install-llvm-action@v2.0.4
+    #   with:
+    #     version: "18"
+    #     env: true
 
     - name: Configure CMake
       run: >
