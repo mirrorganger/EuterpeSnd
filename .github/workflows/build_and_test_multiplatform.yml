@@ -8,7 +8,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         configuraiton : [Debug, Release]     
 
     runs-on: ${{ matrix.os }}
@@ -22,9 +22,9 @@ jobs:
       run  : sudo apt-get install -y libasound2-dev
 
     - name: Install LLVM and Clang
-      uses: KyleMayes/install-llvm-action@v2
+      uses: KyleMayes/install-llvm-action@v2.0.4
       with:
-        version: "18.1.8"
+        version: "18"
         env: true
 
     - name: Print clang version
