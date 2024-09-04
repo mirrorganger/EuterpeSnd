@@ -12,7 +12,7 @@ namespace utilities {
 
 class Conversions {
 public:
-  __attribute_const__ static double pitchToFrequency(double pitch) {
+  static constexpr double pitchToFrequency(double pitch) {
     double exponent = (pitch - static_cast<double>(MIDLE_C_PITH)) *
                       static_cast<double>(1.0f / SEMITONES_PER_OCTAVE);
     return MIDLE_C_FREQUENCY * std::pow(2.0, exponent);

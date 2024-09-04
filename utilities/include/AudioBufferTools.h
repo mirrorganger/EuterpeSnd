@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstring>
 #include <vector>
+#include <numbers>
 
 namespace utilities {
 
@@ -68,7 +69,7 @@ public:
     std::vector<float> buffer(numSamples * numChannels);
     for (int sampleCnt = 0; sampleCnt < numSamples; ++sampleCnt) {
       auto sample = static_cast<float>(
-          std::sin(2.0 * M_PIf64 * static_cast<double>(sampleCnt) * freq /
+          std::sin(2.0 * std::numbers::pi_v<double> * static_cast<double>(sampleCnt) * freq /
                    static_cast<double>(numSamples)));
       for (int channelCnt = 0; channelCnt < numChannels; ++channelCnt) {
         buffer[sampleCnt * numChannels + channelCnt] = sample;
