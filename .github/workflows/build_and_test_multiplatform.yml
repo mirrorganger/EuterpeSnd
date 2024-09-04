@@ -8,7 +8,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [macos-14]
         configuraiton : [Debug, Release]     
 
     runs-on: ${{ matrix.os }}
