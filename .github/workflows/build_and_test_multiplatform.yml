@@ -21,9 +21,9 @@ jobs:
       if: runner.os == 'Linux' 
       run  : sudo apt-get install -y libasound2-dev
 
-    - name : install libcurses
+    - name : install deps
       if: runner.os == 'Linux' 
-      run  : sudo apt-get install -y libncurses5
+      run  : sudo apt-get install -y libtinfo5
 
     - name: Install LLVM and Clang
       uses: KyleMayes/install-llvm-action@v2.0.4
