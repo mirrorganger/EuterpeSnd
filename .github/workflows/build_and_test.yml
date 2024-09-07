@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         compiler : [gcc, clang]
-        configuraiton : [debug, release]
+        configuration : [debug, release]
 
     steps:
     - name : install alsa 
