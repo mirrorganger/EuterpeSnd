@@ -18,6 +18,9 @@ jobs:
         configuration : [debug, release]
 
     steps:
+    - name : install ninja build 
+      run  : sudo apt-get install -y ninja-build
+
     - name : install alsa 
       run  : sudo apt-get install -y libasound2-dev
 
