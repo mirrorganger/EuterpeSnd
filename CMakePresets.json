@@ -100,6 +100,17 @@
       }
     },
     {
+      "name": "gcc-release",
+      "displayName": "Gcc Release Tests",
+      "configurePreset": "gcc-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "stopOnFailure": false
+      }
+    },
+    {
       "name": "clang-debug",
       "displayName": "Clang Debug Tests",
       "configurePreset": "clang-debug",
@@ -109,8 +120,18 @@
       "execution": {
         "stopOnFailure": false
       }
+    },
+    {
+      "name": "clang-release",
+      "displayName": "Clang Release Tests",
+      "configurePreset": "clang-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "stopOnFailure": false
+      }
     }
-
   ],
   "workflowPresets": [
     {
@@ -131,6 +152,23 @@
      ]
     },
     {
+      "name": "gcc-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "gcc-release"
+        },
+        {
+          "type": "build",
+          "name": "gcc-release"
+        },
+        {
+          "type": "test",
+          "name": "gcc-release"
+        }
+      ]
+     },
+    {
       "name": "clang-debug",
       "steps": [
         {
@@ -144,6 +182,23 @@
         {
           "type": "test",
           "name": "clang-debug"
+        }
+      ]
+    },
+    {
+      "name": "clang-relase",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-release"
+        },
+        {
+          "type": "build",
+          "name": "clang-release"
+        },
+        {
+          "type": "test",
+          "name": "clang-release"
         }
       ]
     }
