@@ -17,7 +17,7 @@ jobs:
         compiler : [gcc, clang]
         configuration : [debug, release]
 
-        exclude:
+        include:
           - compiler: gcc
             configuration: debug
             coverage: true
@@ -48,17 +48,17 @@ jobs:
     - name : Run tests
       run : GTEST_COLOR=1 ctest --preset=${{matrix.compiler}}-${{matrix.configuration}} --verbose
 
-    - if: matrix.coverage
+    - if: ${{ matrix.coverage }}
       name : build with coverage support
       run: cmake --workflow --preset=${{matrix.compiler}}-coverage
 
-    - if: matrix.coverage
+    - if: ${{ matrix.coverage }}
       name: Generate a code coverage report
       working-directory:  ${{github.workspace}}/build/${{matrix.compiler}}-coverage
       run :
         gcovr -r ${{github.workspace}} --print-summary --xml-pretty --xml coverage.xml --exclude *_deps*
 
-    - if: matrix.coverage
+    - if: if: ${{ matrix.coverage }}
       name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4
       with:
