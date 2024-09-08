@@ -18,8 +18,9 @@ jobs:
         configuration : [debug, release, coverage]
 
         exclude:
-          - compiler: clang
-            configuration: coverage
+          - compiler: gcc
+            configuration: debug
+            coverage :  true
 
     steps:
     - name : install ninja build 
@@ -44,22 +45,24 @@ jobs:
     - name: Build
       run: cmake --build --preset=${{matrix.compiler}}-${{matrix.configuration}} 
 
-    - if: ${{matrix.configuration}} != "coverage"
-      name : Run tests
+    - name : Run tests
       run : GTEST_COLOR=1 ctest --preset=${{matrix.compiler}}-${{matrix.configuration}} --verbose
 
-    - if: ${{matrix.configuration}} == "coverage"
+    - if: coverage
+      run: cmake --workflow --preset=${{matrix.compiler}}-coverage
+
+    - if: coverage
       name: Generate a code coverage report
-      working-directory:  ${{github.workspace}}/build/${{matrix.compiler}}-${{matrix.configuration}}
+      working-directory:  ${{github.workspace}}/build/${{matrix.compiler}}-coverage
       run :
         gcovr -r ${{github.workspace}} --print-summary --xml-pretty --xml coverage.xml --exclude *_deps*
 
-    - if: ${{matrix.configuration}} == "coverage"
+    - if: coverage
       name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4
       with:
         token: ${{secrets.CODECOV_TOKEN}}
-        file:  ${{github.workspace}}/build/${{matrix.compiler}}-${{matrix.configuration}}/coverage.xml
+        file:  ${{github.workspace}}/build/${{matrix.compiler}}-coverage/coverage.xml
 
     ## https://gcovr.com/en/stable/guide/compiling.html?      
     # - name : Create coverage report
