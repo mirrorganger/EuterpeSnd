@@ -47,7 +47,7 @@ jobs:
     - name: Generate a code coverage report
       working-directory:  ${{github.workspace}}/build/${{matrix.compiler}}-${{matrix.configuration}}
       run :
-        gcovr -r ../../ --print-summary --xml-pretty --xml coverage.xml --exclude *_deps*
+        gcovr -r ${{github.workspace}} --print-summary --xml-pretty --xml coverage.xml --exclude *_deps*
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4
