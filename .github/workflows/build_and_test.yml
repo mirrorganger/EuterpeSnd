@@ -15,12 +15,12 @@ jobs:
     strategy:
       matrix:
         compiler : [gcc, clang]
-        configuration : [debug, release, coverage]
+        configuration : [debug, release]
 
         exclude:
           - compiler: gcc
             configuration: debug
-            coverage :  true
+            coverage: true
 
     steps:
     - name : install ninja build 
