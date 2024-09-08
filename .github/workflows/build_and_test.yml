@@ -27,6 +27,9 @@ jobs:
     - name : install lcov
       run  : sudo apt-get install -y lcov
 
+    - name : install gcovr
+      run : pip install --break-system-packages --user gcovr
+
     - uses: actions/checkout@v4
       with:
         submodules: recursive
@@ -42,11 +45,15 @@ jobs:
 
 
     - name: Generate a code coverage report
-      uses: threeal/gcovr-action@v1.0.0
+      working-directory:  ${{github.workspace}}/build/${{matrix.compiler}}-${{matrix.configuration}}
+      run :
+        gcovr -r ../../ --print-summary --xml-pretty --xml coverage.xml --exclude *_deps*
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4
       with:
-        excludes: |
-          '*/*Test*'
-          '*deps/*'
+        token: ${{secrets.CODECOV_TOKEN}}
+        file:  ${{github.workspace}}/build/${{matrix.compiler}}-${{matrix.configuration}}/
 
     ## https://gcovr.com/en/stable/guide/compiling.html?      
     # - name : Create coverage report
