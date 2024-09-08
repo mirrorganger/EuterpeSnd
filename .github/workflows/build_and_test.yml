@@ -58,7 +58,7 @@ jobs:
       run :
         gcovr -r ${{github.workspace}} --print-summary --xml-pretty --xml coverage.xml --exclude *_deps*
 
-    - if: if: ${{ matrix.coverage }}
+    - if: ${{ matrix.coverage }}
       name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4
       with:
