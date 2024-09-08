@@ -53,7 +53,7 @@ jobs:
       uses: codecov/codecov-action@v4
       with:
         token: ${{secrets.CODECOV_TOKEN}}
-        file:  ${{github.workspace}}/build/${{matrix.compiler}}-${{matrix.configuration}}/
+        file:  ${{github.workspace}}/build/${{matrix.compiler}}-${{matrix.configuration}}/coverage.xml
 
     ## https://gcovr.com/en/stable/guide/compiling.html?      
     # - name : Create coverage report
