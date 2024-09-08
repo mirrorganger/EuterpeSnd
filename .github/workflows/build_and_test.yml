@@ -44,17 +44,17 @@ jobs:
     - name: Build
       run: cmake --build --preset=${{matrix.compiler}}-${{matrix.configuration}} 
 
-    - if: matrix.configuration != coverage
+    - if: ${{matrix.configuration}} != 'coverage'
       name : Run tests
       run : GTEST_COLOR=1 ctest --preset=${{matrix.compiler}}-${{matrix.configuration}} --verbose
 
-    - if: matrix.configuration == coverage
+    - if: ${{matrix.configuration}} == 'coverage'
       name: Generate a code coverage report
       working-directory:  ${{github.workspace}}/build/${{matrix.compiler}}-${{matrix.configuration}}
       run :
         gcovr -r ${{github.workspace}} --print-summary --xml-pretty --xml coverage.xml --exclude *_deps*
 
-    - if: matrix.configuration == coverage
+    - if: ${{matrix.configuration}} == 'coverage'
       name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4
       with:
