@@ -11,41 +11,56 @@ jobs:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 
     strategy:
       matrix:
-        configuraiton : [Debug, Release]
+        compiler : [gcc, clang]
+        configuration : [debug, release]
+
+        include:
+          - compiler: gcc
+            configuration: debug
+            coverage: true
 
     steps:
+    - name : install ninja build 
+      run  : sudo apt-get install -y ninja-build
+
     - name : install alsa 
       run  : sudo apt-get install -y libasound2-dev
 
     - name : install lcov
       run  : sudo apt-get install -y lcov
 
+    - name : install gcovr
+      run : pip install --break-system-packages --user gcovr
+
     - uses: actions/checkout@v4
       with:
         submodules: recursive
 
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.configuration}} -DBUILD_APPS=ON -DENABLE_COVERAGE=ON
+      run: cmake --preset=${{matrix.compiler}}-${{matrix.configuration}}
 
     - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build/${{matrix.configuration}} 
+      run: cmake --build --preset=${{matrix.compiler}}-${{matrix.configuration}} 
 
-    - name : Tests
-      run : GTEST_COLOR=1 ctest --test-dir ${{github.workspace}}/build/${{matrix.configuration}} --verbose
+    - name : Run tests
+      run : GTEST_COLOR=1 ctest --preset=${{matrix.compiler}}-${{matrix.configuration}} --verbose
 
-    - name : Create coverage report
-      run : |
-            lcov --directory ${{github.workspace}}/build/${{matrix.configuration}} --capture --output=${{github.workspace}}/build/${{matrix.configuration}}/lcov.info
-            lcov --remove ${{github.workspace}}/build/lcov.info '*deps/*' '/usr/include/*' '*/*Test*' --output-file ${{github.workspace}}/build/lcov.info
+    - if: ${{ matrix.coverage }}
+      name : build and test with coverage support
+      run: cmake --workflow --preset=${{matrix.compiler}}-coverage
 
-    - name: Upload coverage reports to Codecov
+    - if: ${{ matrix.coverage }}
+      name: Generate a code coverage report
+      working-directory:  ${{github.workspace}}/build/${{matrix.compiler}}-coverage
+      run :
+        gcovr -r ${{github.workspace}} --print-summary --xml-pretty --xml coverage.xml --exclude *_deps*
+
+    - if: ${{ matrix.coverage }}
+      name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4
       with:
         token: ${{secrets.CODECOV_TOKEN}}
-        file:  ${{github.workspace}}/build/${{matrix.configuration}}/lcov.info
+        file:  ${{github.workspace}}/build/${{matrix.compiler}}-coverage/coverage.xml

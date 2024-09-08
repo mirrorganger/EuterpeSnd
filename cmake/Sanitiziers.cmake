@@ -1,8 +1,8 @@
-option(ENABLE_COVERAGE "Enables code coverage support analysis from GNU or clang" OFF)
+option(ENABLE_COVERAGE "Enables code coverage support analysis from GNU or Clang" OFF)
 
 function(enable_coverage TARGET_NAME)
     if(ENABLE_COVERAGE)
-        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "clang")
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             message(STATUS "Coverage analysis enabled")
             target_compile_options(${TARGET_NAME} INTERFACE --coverage -O0 -g)
             target_link_libraries(${TARGET_NAME} INTERFACE --coverage)

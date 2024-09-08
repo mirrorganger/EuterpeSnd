@@ -1,0 +1,248 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 27,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base-debug",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE" : "Debug"
+      }
+    },
+    {
+      "name": "base-release",
+      "hidden": true,
+      "inherits": "base-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE" : "Release",
+        "BUILD_APPS": true
+      }
+    },
+    {
+      "name": "gcc",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "clang",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang-18",
+        "CMAKE_CXX_COMPILER": "clang++-18"
+      }
+    },
+    {
+      "name": "gcc-debug",
+      "displayName": "GCC Debug",
+      "inherits": ["base-debug","gcc"]
+    },
+    {
+      "name": "gcc-release",
+      "displayName": "GCC Release",
+      "inherits": ["base-release","gcc"]
+    },
+    {
+      "name": "gcc-coverage",
+      "displayName": "GCC Release",
+      "inherits": ["base-debug","gcc"],
+      "cacheVariables": {
+        "ENABLE_COVERAGE": true
+      }
+    },
+    {
+      "name": "clang-debug",
+      "displayName": "Clang Debug",
+      "inherits": ["base-release","clang"]
+    },
+    {
+      "name": "clang-release",
+      "displayName": "Clang Release",
+      "inherits": ["base-release","clang"]
+    }
+  ],
+  "buildPresets": [
+    {
+     "name": "gcc-debug",
+      "displayName" : "GCC Debug",
+      "configurePreset": "gcc-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "gcc-release",
+      "displayName" : "GCC Release",
+      "configurePreset": "gcc-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "gcc-coverage",
+      "displayName" : "GCC Coverage",
+      "configurePreset": "gcc-coverage",
+      "configuration": "Debug"
+    },
+    {
+      "name": "clang-debug",
+      "displayName" : "Clang Debug",
+      "configurePreset": "clang-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "clang-release",
+      "displayName" : "Clang Release",
+      "configurePreset": "clang-release",
+      "configuration": "Release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "gcc-debug",
+      "displayName": "Gcc Debug Tests",
+      "configurePreset": "gcc-debug",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "stopOnFailure": false
+      }
+    },
+    {
+      "name": "gcc-release",
+      "displayName": "Gcc Release Tests",
+      "configurePreset": "gcc-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "stopOnFailure": false
+      }
+    },
+    {
+      "name": "gcc-coverage",
+      "displayName": "Gcc Coverage Tests",
+      "configurePreset": "gcc-coverage",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "stopOnFailure": false
+      }
+    },
+    {
+      "name": "clang-debug",
+      "displayName": "Clang Debug Tests",
+      "configurePreset": "clang-debug",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "stopOnFailure": false
+      }
+    },
+    {
+      "name": "clang-release",
+      "displayName": "Clang Release Tests",
+      "configurePreset": "clang-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "stopOnFailure": false
+      }
+    }
+  ],
+  "workflowPresets": [
+    {
+     "name": "gcc-debug",
+     "steps": [
+       {
+         "type": "configure",
+         "name": "gcc-debug"
+       },
+       {
+         "type": "build",
+         "name": "gcc-debug"
+       },
+       {
+         "type": "test",
+         "name": "gcc-debug"
+       }
+     ]
+    },
+    {
+      "name": "gcc-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "gcc-release"
+        },
+        {
+          "type": "build",
+          "name": "gcc-release"
+        },
+        {
+          "type": "test",
+          "name": "gcc-release"
+        }
+      ]
+     },
+    {
+      "name": "gcc-coverage",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "gcc-coverage"
+        },
+        {
+          "type": "build",
+          "name": "gcc-coverage"
+        },
+        {
+          "type": "test",
+          "name": "gcc-coverage"
+        }
+      ]
+     },
+    {
+      "name": "clang-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-debug"
+        },
+        {
+          "type": "build",
+          "name": "clang-debug"
+        },
+        {
+          "type": "test",
+          "name": "clang-debug"
+        }
+      ]
+    },
+    {
+      "name": "clang-relase",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-release"
+        },
+        {
+          "type": "build",
+          "name": "clang-release"
+        },
+        {
+          "type": "test",
+          "name": "clang-release"
+        }
+      ]
+    }
+  ]
+}
