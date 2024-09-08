@@ -12,7 +12,8 @@
       "generator": "Ninja",
       "binaryDir": "build/${presetName}",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE" : "Debug"
+        "CMAKE_BUILD_TYPE" : "Debug",
+        "ENABLE_COVERAGE": true
       }
     },
     {
