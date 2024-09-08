@@ -12,8 +12,7 @@
       "generator": "Ninja",
       "binaryDir": "build/${presetName}",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE" : "Debug",
-        "ENABLE_COVERAGE": true
+        "CMAKE_BUILD_TYPE" : "Debug"
       }
     },
     {
@@ -26,40 +25,48 @@
       }
     },
     {
-      "name": "gcc-debug",
-      "displayName": "GCC Debug",
-      "inherits": "base-debug",
+      "name": "gcc",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++"
       }
     },
     {
-      "name": "gcc-release",
-      "displayName": "GCC Release",
-      "inherits": "base-release",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_CXX_COMPILER": "g++"
-      }
-    },
-    {
-      "name": "clang-debug",
-      "displayName": "Clang Debug",
-      "inherits": "base-debug",
+      "name": "clang",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang-18",
         "CMAKE_CXX_COMPILER": "clang++-18"
       }
     },
     {
+      "name": "gcc-debug",
+      "displayName": "GCC Debug",
+      "inherits": ["base-debug","gcc"]
+    },
+    {
+      "name": "gcc-release",
+      "displayName": "GCC Release",
+      "inherits": ["base-release","gcc"]
+    },
+    {
+      "name": "gcc-coverage",
+      "displayName": "GCC Release",
+      "inherits": ["base-debug","gcc"],
+      "cacheVariables": {
+        "ENABLE_COVERAGE": true
+      }
+    },
+    {
+      "name": "clang-debug",
+      "displayName": "Clang Debug",
+      "inherits": ["base-release","clang"]
+    },
+    {
       "name": "clang-release",
       "displayName": "Clang Release",
-      "inherits": "base-release",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_CXX_COMPILER": "g++"
-      }
+      "inherits": ["base-release","clang"]
     }
   ],
   "buildPresets": [
@@ -74,6 +81,12 @@
       "displayName" : "GCC Release",
       "configurePreset": "gcc-release",
       "configuration": "Release"
+    },
+    {
+      "name": "gcc-coverage",
+      "displayName" : "GCC Coverage",
+      "configurePreset": "gcc-coverage",
+      "configuration": "Debug"
     },
     {
       "name": "clang-debug",
@@ -166,6 +179,19 @@
         {
           "type": "test",
           "name": "gcc-release"
+        }
+      ]
+     },
+    {
+      "name": "gcc-coverage",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "gcc-coverage"
+        },
+        {
+          "type": "build",
+          "name": "gcc-coverage"
         }
       ]
      },
