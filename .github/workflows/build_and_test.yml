@@ -49,7 +49,7 @@ jobs:
       run : GTEST_COLOR=1 ctest --preset=${{matrix.compiler}}-${{matrix.configuration}} --verbose
 
     - if: ${{ matrix.coverage }}
-      name : build with coverage support
+      name : build and test with coverage support
       run: cmake --workflow --preset=${{matrix.compiler}}-coverage
 
     - if: ${{ matrix.coverage }}

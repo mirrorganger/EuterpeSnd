@@ -125,6 +125,17 @@
       }
     },
     {
+      "name": "gcc-coverage",
+      "displayName": "Gcc Coverage Tests",
+      "configurePreset": "gcc-coverage",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "stopOnFailure": false
+      }
+    },
+    {
       "name": "clang-debug",
       "displayName": "Clang Debug Tests",
       "configurePreset": "clang-debug",
@@ -191,6 +202,10 @@
         },
         {
           "type": "build",
+          "name": "gcc-coverage"
+        },
+        {
+          "type": "test",
           "name": "gcc-coverage"
         }
       ]
