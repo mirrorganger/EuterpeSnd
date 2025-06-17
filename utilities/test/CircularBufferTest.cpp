@@ -7,7 +7,7 @@
 #include <gmock/gmock.h>
 
 template <typename T, size_t N>
-std::array<T, N> generate_random_array(uint32_t min, uint32_t max) {
+std::array<T, N> generateRandomArray(uint32_t min, uint32_t max) {
   static std::random_device rd;  // you only need to initialize it once
   static std::mt19937 mte(rd()); // this is a relative big object to create
 
@@ -21,7 +21,7 @@ std::array<T, N> generate_random_array(uint32_t min, uint32_t max) {
 template <size_t N, typename DataType, typename StorageT>
 void verifyBuffer(utilities::CircularBuffer<DataType, StorageT> &c_buffer) {
 
-  auto samples = generate_random_array<DataType, N>(30, 450);
+  auto samples = generateRandomArray<DataType, N>(30, 450);
 
   for (const auto &sample : samples) {
     c_buffer.push(sample);
@@ -29,7 +29,7 @@ void verifyBuffer(utilities::CircularBuffer<DataType, StorageT> &c_buffer) {
 
   // Get oldest sample
   EXPECT_EQ(c_buffer.back(), samples.front());
-  // Get newests sample
+  // Get newest sample
   EXPECT_EQ(c_buffer.front(), samples.back());
 
   for (size_t i = 0; i < c_buffer.size(); i++) {
@@ -53,3 +53,31 @@ TEST(CircularBufferTests, simpleOperations) {
     verifyBuffer<N>(c_buffer);
   }
 }
+
+TEST(MultiCircularBufferTets, simpleOperations) {
+  {
+    constexpr std::size_t N = 1 << 6;
+    constexpr std::size_t numChannels = 4;
+    utilities::MultiChannelBuffer<int32_t> mc_buffer(numChannels, N);
+    auto samples = generateRandomArray<int32_t, N>(30, 450);
+
+    for(size_t channel = 0; channel < numChannels; ++channel) {
+      for (const auto &sample : samples) {
+        mc_buffer.push(sample*(channel+1), channel);
+      }
+    }
+    
+    for (size_t channel = 0; channel < numChannels; ++channel) {
+      for (size_t i = 0; i < N; ++i) {
+        auto expected_value = samples[N - 1 - i] * (channel + 1);
+        auto value = mc_buffer(channel, i);
+        EXPECT_EQ(value, expected_value) << "Channel: " << channel << ", Index:" << i;
+      }
+    }
+
+
+  }
+
+}
+
+
